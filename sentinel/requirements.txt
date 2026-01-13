@@ -1,0 +1,28 @@
+# Sentinel - Vulnerability Scanner
+requests>=2.31.0
+httpx>=0.25.0
+aiohttp>=3.9.0
+
+# Parsing
+packaging>=23.0
+toml>=0.10.2
+pyyaml>=6.0.1
+json5>=0.9.14
+
+# CLI
+click>=8.1.0
+rich>=13.6.0
+
+# SBOM Generation
+cyclonedx-bom>=4.0.0
+spdx-tools>=0.8.0
+
+# Caching
+diskcache>=5.6.0
+
+# Utilities
+python-dateutil>=2.8.2
+tenacity>=8.2.0
+
+# Logging
+structlog>=23.2.0

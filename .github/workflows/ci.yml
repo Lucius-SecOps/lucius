@@ -1,0 +1,207 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff black mypy
+          
+      - name: Run ruff
+        run: ruff check .
+        
+      - name: Run black
+        run: black --check .
+        
+      - name: Run mypy
+        run: mypy sentinel talon operations shared --ignore-missing-imports
+
+  test-sentinel:
+    name: Test Sentinel
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r sentinel/requirements.txt
+          pip install -r shared/requirements.txt
+          pip install pytest pytest-cov pytest-asyncio
+          
+      - name: Run tests
+        run: pytest tests/sentinel -v --cov=sentinel --cov-report=xml
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+          TALON_API_URL: http://localhost:5000
+          
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage.xml
+          flags: sentinel
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  test-talon:
+    name: Test Talon
+    runs-on: ubuntu-latest
+    needs: lint
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: lucius
+          POSTGRES_PASSWORD: lucius_dev
+          POSTGRES_DB: lucius_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r talon/requirements.txt
+          pip install -r shared/requirements.txt
+          pip install pytest pytest-cov pytest-asyncio
+          
+      - name: Run tests
+        run: pytest tests/talon -v --cov=talon --cov-report=xml
+        env:
+          DATABASE_URL: postgresql://lucius:lucius_dev@localhost:5432/lucius_test
+          REDIS_URL: redis://localhost:6379/0
+          FLASK_ENV: testing
+          
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage.xml
+          flags: talon
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  test-operations:
+    name: Test Operations
+    runs-on: ubuntu-latest
+    needs: lint
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: lucius
+          POSTGRES_PASSWORD: lucius_dev
+          POSTGRES_DB: lucius_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r operations/requirements.txt
+          pip install -r shared/requirements.txt
+          pip install pytest pytest-cov pytest-asyncio
+          
+      - name: Run tests
+        run: pytest tests/operations -v --cov=operations --cov-report=xml
+        env:
+          DATABASE_URL: postgresql://lucius:lucius_dev@localhost:5432/lucius_test
+          TALON_API_URL: http://localhost:5000
+          
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage.xml
+          flags: operations
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  build:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: [test-sentinel, test-talon, test-operations]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: Build Sentinel
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./sentinel/Dockerfile
+          push: false
+          tags: lucius/sentinel:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          
+      - name: Build Talon
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./talon/Dockerfile
+          push: false
+          tags: lucius/talon:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          
+      - name: Build Operations
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./operations/Dockerfile
+          push: false
+          tags: lucius/operations:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

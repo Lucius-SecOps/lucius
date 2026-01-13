@@ -1,0 +1,2 @@
+# Shared utilities requirements
+structlog>=23.0.0

@@ -1,0 +1,187 @@
+version: "3.9"
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: lucius-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-lucius}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lucius_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-lucius_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-lucius} -d ${POSTGRES_DB:-lucius_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - lucius-network
+
+  # Redis Cache & Message Broker
+  redis:
+    image: redis:7-alpine
+    container_name: lucius-redis
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - lucius-network
+
+  # Sentinel - Vulnerability Scanner
+  sentinel:
+    build:
+      context: .
+      dockerfile: sentinel/Dockerfile
+    container_name: lucius-sentinel
+    environment:
+      - TALON_API_URL=http://talon:5000
+      - NVD_API_KEY=${NVD_API_KEY:-}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ./sentinel:/app/sentinel:ro
+      - ./shared:/app/shared:ro
+      - sbom_reports:/app/sbom_reports
+    depends_on:
+      talon:
+        condition: service_healthy
+    networks:
+      - lucius-network
+
+  # Talon - Threat Intelligence Hub (API)
+  talon:
+    build:
+      context: .
+      dockerfile: talon/Dockerfile
+    container_name: lucius-talon
+    environment:
+      - FLASK_APP=talon.app:create_app
+      - FLASK_ENV=${FLASK_ENV:-development}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-lucius}:${POSTGRES_PASSWORD:-lucius_secret}@postgres:5432/${POSTGRES_DB:-lucius_db}
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+      - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID:-}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN:-}
+      - TWILIO_FROM_NUMBER=${TWILIO_FROM_NUMBER:-}
+      - SENDGRID_API_KEY=${SENDGRID_API_KEY:-}
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-}
+    volumes:
+      - ./talon:/app/talon:ro
+      - ./shared:/app/shared:ro
+    ports:
+      - "5000:5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - lucius-network
+
+  # Talon - Celery Worker
+  talon-worker:
+    build:
+      context: .
+      dockerfile: talon/Dockerfile
+    container_name: lucius-talon-worker
+    command: celery -A talon.celery_app:celery worker --loglevel=info --concurrency=4
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-lucius}:${POSTGRES_PASSWORD:-lucius_secret}@postgres:5432/${POSTGRES_DB:-lucius_db}
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID:-}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN:-}
+      - TWILIO_FROM_NUMBER=${TWILIO_FROM_NUMBER:-}
+      - SENDGRID_API_KEY=${SENDGRID_API_KEY:-}
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-}
+    volumes:
+      - ./talon:/app/talon:ro
+      - ./shared:/app/shared:ro
+    depends_on:
+      talon:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - lucius-network
+
+  # Talon - Celery Beat Scheduler
+  talon-beat:
+    build:
+      context: .
+      dockerfile: talon/Dockerfile
+    container_name: lucius-talon-beat
+    command: celery -A talon.celery_app:celery beat --loglevel=info
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-lucius}:${POSTGRES_PASSWORD:-lucius_secret}@postgres:5432/${POSTGRES_DB:-lucius_db}
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/2
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ./talon:/app/talon:ro
+      - ./shared:/app/shared:ro
+    depends_on:
+      talon:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - lucius-network
+
+  # Operations - Grant & Data Management
+  operations:
+    build:
+      context: .
+      dockerfile: operations/Dockerfile
+    container_name: lucius-operations
+    environment:
+      - TALON_API_URL=http://talon:5000
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-lucius}:${POSTGRES_PASSWORD:-lucius_secret}@postgres:5432/${POSTGRES_DB:-lucius_db}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID:-}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN:-}
+      - TWILIO_FROM_NUMBER=${TWILIO_FROM_NUMBER:-}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ./operations:/app/operations:ro
+      - ./shared:/app/shared:ro
+      - operations_data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      talon:
+        condition: service_healthy
+    networks:
+      - lucius-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  sbom_reports:
+  operations_data:
+
+networks:
+  lucius-network:
+    driver: bridge
