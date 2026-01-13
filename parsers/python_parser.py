@@ -39,7 +39,7 @@ class PythonParser(BaseParser):
             ],
             'insecure_deserialization': [
                 r'pickle\.loads',
-                r'yaml\.load\([^)]*\)',  # Without safe_load
+                r'yaml\.load\([^,)]*\)(?!\s*,\s*Loader\s*=\s*yaml\.SafeLoader)',  # Without SafeLoader
             ],
         }
     
