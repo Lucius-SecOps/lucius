@@ -14,7 +14,7 @@ class PythonParser:
         """Initialize the Python parser with vulnerability patterns."""
         self.vulnerability_patterns = {
             "sql_injection": {
-                "pattern": r'(execute|cursor\.execute|query)\s*\([^)]*(\+|%|\.format|f["\'])',
+                "pattern": r'(execute|cursor\.execute|query)\s*\([^)]*(\+|%|\.format\(|f["\'])(?!["\'])',
                 "severity": "high",
                 "description": "Potential SQL injection vulnerability"
             },
@@ -24,7 +24,7 @@ class PythonParser:
                 "description": "Potential command injection vulnerability"
             },
             "hardcoded_password": {
-                "pattern": r'password\s*=\s*["\'][^"\']{3,}["\']',
+                "pattern": r'(password|passwd|pwd|pass)\s*=\s*["\'][^"\']{3,}["\']',
                 "severity": "high",
                 "description": "Hardcoded password detected"
             },
