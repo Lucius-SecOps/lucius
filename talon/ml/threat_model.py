@@ -10,6 +10,7 @@ import pickle
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 import joblib
 import numpy as np
@@ -38,7 +39,7 @@ class ThreatModel:
         metrics: Model performance metrics
     """
 
-    model: any  # RandomForestRegressor or similar
+    model: Any  # RandomForestRegressor or similar
     scaler: StandardScaler
     feature_names: list[str]
     version: str
@@ -272,7 +273,7 @@ class MLThreatScorer:
         return str(models_dir / "threat_model_latest.pkl")
 
 
-def create_threat_model(model_type: str = "random_forest", **model_kwargs) -> any:
+def create_threat_model(model_type: str = "random_forest", **model_kwargs) -> Any:
     """
     Create a scikit-learn model for threat scoring.
 
