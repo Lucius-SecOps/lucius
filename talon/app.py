@@ -1,5 +1,7 @@
 """Flask application factory."""
 
+from typing import Any
+
 from flask import Flask
 from flask_cors import CORS
 
@@ -11,7 +13,7 @@ from talon.extensions import db, migrate
 logger = get_logger(__name__)
 
 
-def create_app(config_override: dict = None) -> Flask:
+def create_app(config_override: dict[str, Any] | None = None) -> Flask:
     """
     Create and configure the Flask application.
 
