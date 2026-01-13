@@ -17,12 +17,12 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from shared.logging import get_logger
 from talon.ml.model_trainer import ThreatModelTrainer
-from talon.ml.threat_model import MLThreatScorer
+from talon.ml.threat_model import MLThreatScorer, ThreatModel
 
 logger = get_logger(__name__)
 
 
-def train_synthetic(args):
+def train_synthetic(args: argparse.Namespace) -> ThreatModel:
     """Train model on synthetic data."""
     logger.info("=" * 60)
     logger.info("Training Threat Scoring Model on Synthetic Data")
@@ -78,7 +78,7 @@ def train_synthetic(args):
     return model
 
 
-def train_from_database(args):
+def train_from_database(args: argparse.Namespace) -> ThreatModel | None:
     """Train model on real database data."""
     logger.info("=" * 60)
     logger.info("Training Threat Scoring Model from Database")
@@ -132,7 +132,7 @@ def train_from_database(args):
         return model
 
 
-def evaluate_model(args):
+def evaluate_model(args: argparse.Namespace) -> None:
     """Evaluate a trained model."""
     logger.info("=" * 60)
     logger.info("Evaluating Threat Scoring Model")
@@ -191,7 +191,7 @@ def evaluate_model(args):
     logger.info("\n✓ Evaluation complete!")
 
 
-def main():
+def main() -> None:
     """Main CLI entry point."""
     parser = argparse.ArgumentParser(description="Train and evaluate threat scoring models")
 

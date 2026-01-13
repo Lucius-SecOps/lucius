@@ -24,7 +24,7 @@ class Dependency:
     source: str | None = None
     dependencies: list["Dependency"] = field(default_factory=list)
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, str | bool | None]:
         """Convert to dictionary."""
         return {
             "name": self.name,

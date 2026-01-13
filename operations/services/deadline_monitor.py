@@ -2,6 +2,7 @@
 
 import time
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from sqlalchemy.orm import Session
 
@@ -16,7 +17,7 @@ logger = get_logger(__name__)
 class SMSNotifier:
     """SMS notification via Twilio."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.config = config.twilio
 
     def is_configured(self) -> bool:
@@ -51,7 +52,7 @@ class SMSNotifier:
 class DeadlineMonitor:
     """Service for monitoring grant deadlines and sending reminders."""
 
-    def __init__(self, session: Session):
+    def __init__(self, session: Session) -> None:
         self.session = session
         self.grant_repo = GrantRepository(session)
         self.milestone_repo = MilestoneRepository(session)
@@ -231,7 +232,7 @@ class DeadlineMonitor:
             for grant in overdue:
                 logger.warning(f"  - {grant.grant_name}: deadline was {grant.submission_deadline}")
 
-    def check_and_alert(self, phone_numbers: list[str]) -> dict:
+    def check_and_alert(self, phone_numbers: list[str]) -> dict[str, int]:
         """
         Run check and send alerts.
 

@@ -1,5 +1,6 @@
 """Scans API endpoints."""
 
+from typing import Any
 from uuid import UUID
 
 from flask import request
@@ -77,7 +78,7 @@ class ScanList(Resource):
     @scans_ns.param("limit", "Maximum results to return", type=int, default=50)
     @scans_ns.param("offset", "Result offset for pagination", type=int, default=0)
     @scans_ns.marshal_list_with(scan_output_model)
-    def get(self):
+    def get(self) -> list[dict[str, Any]]:
         """List all scans with optional filtering."""
         project = request.args.get("project")
         status = request.args.get("status")
@@ -99,7 +100,7 @@ class ScanList(Resource):
     @scans_ns.doc("create_scan")
     @scans_ns.expect(scan_input_model)
     @scans_ns.marshal_with(scan_output_model, code=201)
-    def post(self):
+    def post(self) -> tuple[dict[str, Any], int]:
         """Create a new scan result."""
         data = request.json
 
@@ -118,7 +119,7 @@ class ScanResource(Resource):
 
     @scans_ns.doc("get_scan")
     @scans_ns.marshal_with(scan_output_model)
-    def get(self, scan_id: str):
+    def get(self, scan_id: str) -> dict[str, Any]:
         """Get scan details by ID."""
         try:
             uuid_id = UUID(scan_id)
@@ -133,7 +134,7 @@ class ScanResource(Resource):
 
     @scans_ns.doc("delete_scan")
     @scans_ns.response(204, "Scan deleted")
-    def delete(self, scan_id: str):
+    def delete(self, scan_id: str) -> tuple[str, int]:
         """Delete a scan result."""
         try:
             uuid_id = UUID(scan_id)
@@ -157,7 +158,7 @@ class ScanVulnerabilities(Resource):
     """Scan vulnerabilities resource."""
 
     @scans_ns.doc("get_scan_vulnerabilities")
-    def get(self, scan_id: str):
+    def get(self, scan_id: str) -> list[dict[str, Any]]:
         """Get vulnerabilities for a specific scan."""
         try:
             uuid_id = UUID(scan_id)
@@ -176,7 +177,7 @@ class ScanStats(Resource):
     """Scan statistics resource."""
 
     @scans_ns.doc("get_scan_stats")
-    def get(self):
+    def get(self) -> dict[str, Any]:
         """Get overall scan statistics."""
         from sqlalchemy import func
 
