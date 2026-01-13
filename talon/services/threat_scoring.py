@@ -48,10 +48,10 @@ class ThreatScoringService:
 
     # CVSS vector components that increase exploit likelihood
     EXPLOIT_INDICATORS = [
-        "AV:N",   # Network attack vector
-        "AC:L",   # Low attack complexity
-        "PR:N",   # No privileges required
-        "UI:N",   # No user interaction
+        "AV:N",  # Network attack vector
+        "AC:L",  # Low attack complexity
+        "PR:N",  # No privileges required
+        "UI:N",  # No user interaction
     ]
 
     def calculate_threat_score(
@@ -85,11 +85,11 @@ class ThreatScoringService:
         }
 
         score = (
-            factors.cvss_score * weights["cvss_score"] +
-            factors.severity_weight * weights["severity_weight"] +
-            factors.exploit_likelihood * weights["exploit_likelihood"] +
-            factors.age_factor * weights["age_factor"] +
-            factors.affected_scope * weights["affected_scope"]
+            factors.cvss_score * weights["cvss_score"]
+            + factors.severity_weight * weights["severity_weight"]
+            + factors.exploit_likelihood * weights["exploit_likelihood"]
+            + factors.age_factor * weights["age_factor"]
+            + factors.affected_scope * weights["affected_scope"]
         ) * 100
 
         # Clamp to 0-100
@@ -119,8 +119,7 @@ class ThreatScoringService:
 
         # Count exploit indicators present
         indicator_count = sum(
-            1 for indicator in self.EXPLOIT_INDICATORS
-            if indicator in cvss_vector
+            1 for indicator in self.EXPLOIT_INDICATORS if indicator in cvss_vector
         )
 
         # Normalize to 0-1
@@ -192,8 +191,8 @@ class ThreatScoringService:
         threshold: float = 70.0,
     ) -> list[Vulnerability]:
         """Get vulnerabilities with threat scores above threshold."""
-        return Vulnerability.query.filter(
-            Vulnerability.threat_score >= threshold
-        ).order_by(
-            Vulnerability.threat_score.desc()
-        ).all()
+        return (
+            Vulnerability.query.filter(Vulnerability.threat_score >= threshold)
+            .order_by(Vulnerability.threat_score.desc())
+            .all()
+        )

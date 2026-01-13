@@ -57,9 +57,7 @@ class TestCycloneDXGenerator:
     def test_generate_sbom(self, generator, dependencies):
         """Test generating CycloneDX SBOM."""
         sbom = generator.generate(
-            dependencies=dependencies,
-            project_name="test-project",
-            project_version="1.0.0"
+            dependencies=dependencies, project_name="test-project", project_version="1.0.0"
         )
 
         assert sbom["bomFormat"] == "CycloneDX"
@@ -69,30 +67,24 @@ class TestCycloneDXGenerator:
     def test_component_format(self, generator, dependencies):
         """Test component format."""
         sbom = generator.generate(
-            dependencies=dependencies,
-            project_name="test",
-            project_version="1.0.0"
+            dependencies=dependencies, project_name="test", project_version="1.0.0"
         )
 
-        lodash = next(
-            c for c in sbom["components"] if c["name"] == "lodash"
-        )
+        lodash = next(c for c in sbom["components"] if c["name"] == "lodash")
         assert lodash["type"] == "library"
         assert lodash["version"] == "4.17.21"
         assert "purl" in lodash
 
     def test_save_to_file(self, generator, dependencies):
         """Test saving SBOM to file."""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             output_path = Path(f.name)
 
         generator.save(
             dependencies=dependencies,
             project_name="test",
             project_version="1.0.0",
-            output_path=output_path
+            output_path=output_path,
         )
 
         with open(output_path) as f:
@@ -119,9 +111,7 @@ class TestSPDXGenerator:
     def test_generate_sbom(self, generator, dependencies):
         """Test generating SPDX SBOM."""
         sbom = generator.generate(
-            dependencies=dependencies,
-            project_name="test-project",
-            project_version="1.0.0"
+            dependencies=dependencies, project_name="test-project", project_version="1.0.0"
         )
 
         assert sbom["spdxVersion"] == "SPDX-2.3"
@@ -130,9 +120,7 @@ class TestSPDXGenerator:
     def test_package_format(self, generator, dependencies):
         """Test package format."""
         sbom = generator.generate(
-            dependencies=dependencies,
-            project_name="test",
-            project_version="1.0.0"
+            dependencies=dependencies, project_name="test", project_version="1.0.0"
         )
 
         pkg = sbom["packages"][0]
@@ -142,16 +130,14 @@ class TestSPDXGenerator:
 
     def test_save_to_file(self, generator, dependencies):
         """Test saving SBOM to file."""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             output_path = Path(f.name)
 
         generator.save(
             dependencies=dependencies,
             project_name="test",
             project_version="1.0.0",
-            output_path=output_path
+            output_path=output_path,
         )
 
         with open(output_path) as f:

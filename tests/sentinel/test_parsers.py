@@ -14,9 +14,7 @@ class TestNPMParser:
 
     def test_parse_package_lock(self, sample_package_lock):
         """Test parsing package-lock.json."""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(sample_package_lock, f)
             f.flush()
 
@@ -29,9 +27,7 @@ class TestNPMParser:
 
     def test_parse_empty_file(self):
         """Test parsing empty package-lock.json."""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump({"packages": {}}, f)
             f.flush()
 
@@ -51,9 +47,7 @@ class TestPipParser:
 
     def test_parse_requirements(self, sample_requirements):
         """Test parsing requirements.txt."""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".txt", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
             f.write(sample_requirements)
             f.flush()
 
@@ -71,9 +65,7 @@ class TestPipParser:
     def test_parse_pinned_version(self):
         """Test parsing pinned version."""
         content = "package==1.2.3"
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".txt", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
             f.write(content)
             f.flush()
 
@@ -94,9 +86,7 @@ class TestComposerParser:
 
     def test_parse_composer_lock(self, sample_composer_lock):
         """Test parsing composer.lock."""
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(sample_composer_lock, f)
             f.flush()
 
@@ -110,9 +100,7 @@ class TestComposerParser:
         # Modify to only have packages
         sample_composer_lock.pop("packages-dev")
 
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(sample_composer_lock, f)
             f.flush()
 
@@ -156,11 +144,7 @@ class TestDependency:
 
     def test_dependency_creation(self):
         """Test creating a dependency."""
-        dep = Dependency(
-            name="test-package",
-            version="1.0.0",
-            ecosystem="npm"
-        )
+        dep = Dependency(name="test-package", version="1.0.0", ecosystem="npm")
         assert dep.name == "test-package"
         assert dep.version == "1.0.0"
         assert dep.ecosystem == "npm"

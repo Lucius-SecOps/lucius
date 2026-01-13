@@ -120,11 +120,12 @@ class ScanService:
         limit: int = 10,
     ) -> list[ScanResult]:
         """Get recent scans for a project."""
-        return ScanResult.query.filter_by(
-            project_name=project_name
-        ).order_by(
-            ScanResult.created_at.desc()
-        ).limit(limit).all()
+        return (
+            ScanResult.query.filter_by(project_name=project_name)
+            .order_by(ScanResult.created_at.desc())
+            .limit(limit)
+            .all()
+        )
 
     def get_vulnerable_packages(
         self,
@@ -132,17 +133,17 @@ class ScanService:
         severity: str | None = None,
     ) -> list[dict[str, Any]]:
         """Get list of vulnerable packages across scans."""
-        query = db.session.query(
-            ScanVulnerability.package_name,
-            ScanVulnerability.installed_version,
-            Vulnerability.cve_id,
-            Vulnerability.severity,
-            Vulnerability.cvss_score,
-            ScanResult.project_name,
-        ).join(
-            Vulnerability
-        ).join(
-            ScanResult
+        query = (
+            db.session.query(
+                ScanVulnerability.package_name,
+                ScanVulnerability.installed_version,
+                Vulnerability.cve_id,
+                Vulnerability.severity,
+                Vulnerability.cvss_score,
+                ScanResult.project_name,
+            )
+            .join(Vulnerability)
+            .join(ScanResult)
         )
 
         if project_name:

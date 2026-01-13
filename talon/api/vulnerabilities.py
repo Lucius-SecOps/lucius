@@ -23,6 +23,7 @@ vulnerabilities_ns = Namespace("vulnerabilities", description="Vulnerability man
 # Authentication Decorator (placeholder - integrate with your auth system)
 # ============================================================================
 
+
 def require_auth(f):
     """
     Authentication decorator for protected endpoints.
@@ -32,6 +33,7 @@ def require_auth(f):
     - API keys
     - OAuth
     """
+
     @wraps(f)
     def decorated_function(*args, **kwargs):
         # TODO: Implement actual authentication
@@ -42,12 +44,14 @@ def require_auth(f):
 
         # For now, allow all requests (REMOVE IN PRODUCTION)
         return f(*args, **kwargs)
+
     return decorated_function
 
 
 # ============================================================================
 # Marshmallow Validation Schemas
 # ============================================================================
+
 
 class VulnerabilityCreateSchema(Schema):
     """Schema for creating a new vulnerability."""
@@ -57,7 +61,7 @@ class VulnerabilityCreateSchema(Schema):
 
     cve_id = ma_fields.String(
         required=True,
-        validate=validate.Regexp(r'^CVE-\d{4}-\d{4,}$', error="Invalid CVE format"),
+        validate=validate.Regexp(r"^CVE-\d{4}-\d{4,}$", error="Invalid CVE format"),
     )
     severity = ma_fields.String(
         required=True,
@@ -133,61 +137,74 @@ class VulnerabilityFilterSchema(Schema):
 # Flask-RESTX API Models (for Swagger documentation)
 # ============================================================================
 
-vulnerability_model = vulnerabilities_ns.model("Vulnerability", {
-    "id": fields.String(description="Vulnerability UUID"),
-    "cve_id": fields.String(required=True, description="CVE identifier (e.g., CVE-2024-1234)"),
-    "description": fields.String(description="Vulnerability description"),
-    "severity": fields.String(
-        description="Severity level",
-        enum=["CRITICAL", "HIGH", "MEDIUM", "LOW", "UNKNOWN"],
-    ),
-    "cvss_score": fields.Float(description="CVSS base score (0-10)"),
-    "cvss_vector": fields.String(description="CVSS vector string"),
-    "affected_packages": fields.List(fields.Raw, description="Affected packages"),
-    "references": fields.List(fields.Raw, description="Reference links"),
-    "threat_score": fields.Float(description="ML-based threat score (0-100)"),
-    "published_date": fields.DateTime(description="Publication date"),
-    "modified_date": fields.DateTime(description="Last modification date"),
-    "created_at": fields.DateTime(description="Record creation timestamp"),
-    "updated_at": fields.DateTime(description="Record update timestamp"),
-})
+vulnerability_model = vulnerabilities_ns.model(
+    "Vulnerability",
+    {
+        "id": fields.String(description="Vulnerability UUID"),
+        "cve_id": fields.String(required=True, description="CVE identifier (e.g., CVE-2024-1234)"),
+        "description": fields.String(description="Vulnerability description"),
+        "severity": fields.String(
+            description="Severity level",
+            enum=["CRITICAL", "HIGH", "MEDIUM", "LOW", "UNKNOWN"],
+        ),
+        "cvss_score": fields.Float(description="CVSS base score (0-10)"),
+        "cvss_vector": fields.String(description="CVSS vector string"),
+        "affected_packages": fields.List(fields.Raw, description="Affected packages"),
+        "references": fields.List(fields.Raw, description="Reference links"),
+        "threat_score": fields.Float(description="ML-based threat score (0-100)"),
+        "published_date": fields.DateTime(description="Publication date"),
+        "modified_date": fields.DateTime(description="Last modification date"),
+        "created_at": fields.DateTime(description="Record creation timestamp"),
+        "updated_at": fields.DateTime(description="Record update timestamp"),
+    },
+)
 
-vulnerability_create_model = vulnerabilities_ns.model("VulnerabilityCreate", {
-    "cve_id": fields.String(required=True, description="CVE identifier"),
-    "severity": fields.String(required=True, description="Severity level"),
-    "description": fields.String(description="Vulnerability description"),
-    "cvss_score": fields.Float(description="CVSS score"),
-    "cvss_vector": fields.String(description="CVSS vector"),
-    "affected_packages": fields.List(fields.Raw, description="Affected packages"),
-    "references": fields.List(fields.Raw, description="Reference links"),
-    "published_date": fields.DateTime(description="Publication date"),
-    "modified_date": fields.DateTime(description="Last modification date"),
-    "calculate_threat": fields.Boolean(description="Calculate threat score", default=True),
-})
+vulnerability_create_model = vulnerabilities_ns.model(
+    "VulnerabilityCreate",
+    {
+        "cve_id": fields.String(required=True, description="CVE identifier"),
+        "severity": fields.String(required=True, description="Severity level"),
+        "description": fields.String(description="Vulnerability description"),
+        "cvss_score": fields.Float(description="CVSS score"),
+        "cvss_vector": fields.String(description="CVSS vector"),
+        "affected_packages": fields.List(fields.Raw, description="Affected packages"),
+        "references": fields.List(fields.Raw, description="Reference links"),
+        "published_date": fields.DateTime(description="Publication date"),
+        "modified_date": fields.DateTime(description="Last modification date"),
+        "calculate_threat": fields.Boolean(description="Calculate threat score", default=True),
+    },
+)
 
-vulnerability_update_model = vulnerabilities_ns.model("VulnerabilityUpdate", {
-    "description": fields.String(description="Vulnerability description"),
-    "severity": fields.String(description="Severity level"),
-    "cvss_score": fields.Float(description="CVSS score"),
-    "cvss_vector": fields.String(description="CVSS vector"),
-    "affected_packages": fields.List(fields.Raw, description="Affected packages"),
-    "references": fields.List(fields.Raw, description="Reference links"),
-    "recalculate_threat": fields.Boolean(description="Recalculate threat score", default=False),
-})
+vulnerability_update_model = vulnerabilities_ns.model(
+    "VulnerabilityUpdate",
+    {
+        "description": fields.String(description="Vulnerability description"),
+        "severity": fields.String(description="Severity level"),
+        "cvss_score": fields.Float(description="CVSS score"),
+        "cvss_vector": fields.String(description="CVSS vector"),
+        "affected_packages": fields.List(fields.Raw, description="Affected packages"),
+        "references": fields.List(fields.Raw, description="Reference links"),
+        "recalculate_threat": fields.Boolean(description="Recalculate threat score", default=False),
+    },
+)
 
-dashboard_model = vulnerabilities_ns.model("Dashboard", {
-    "total_vulnerabilities": fields.Integer(description="Total vulnerability count"),
-    "severity_breakdown": fields.Raw(description="Count by severity level"),
-    "threat_score_distribution": fields.Raw(description="Threat score statistics"),
-    "recent_vulnerabilities": fields.List(fields.Nested(vulnerability_model)),
-    "high_threat_vulnerabilities": fields.List(fields.Nested(vulnerability_model)),
-    "trends": fields.Raw(description="Vulnerability trends over time"),
-})
+dashboard_model = vulnerabilities_ns.model(
+    "Dashboard",
+    {
+        "total_vulnerabilities": fields.Integer(description="Total vulnerability count"),
+        "severity_breakdown": fields.Raw(description="Count by severity level"),
+        "threat_score_distribution": fields.Raw(description="Threat score statistics"),
+        "recent_vulnerabilities": fields.List(fields.Nested(vulnerability_model)),
+        "high_threat_vulnerabilities": fields.List(fields.Nested(vulnerability_model)),
+        "trends": fields.Raw(description="Vulnerability trends over time"),
+    },
+)
 
 
 # ============================================================================
 # Service instance (dependency injection)
 # ============================================================================
+
 
 def get_vulnerability_service() -> VulnerabilityService:
     """Get vulnerability service instance."""
@@ -198,12 +215,15 @@ def get_vulnerability_service() -> VulnerabilityService:
 # API Endpoints
 # ============================================================================
 
+
 @vulnerabilities_ns.route("")
 class VulnerabilityList(Resource):
     """Vulnerability collection resource."""
 
     @vulnerabilities_ns.doc("list_vulnerabilities")
-    @vulnerabilities_ns.param("severity", "Filter by severity (CRITICAL, HIGH, MEDIUM, LOW, UNKNOWN)")
+    @vulnerabilities_ns.param(
+        "severity", "Filter by severity (CRITICAL, HIGH, MEDIUM, LOW, UNKNOWN)"
+    )
     @vulnerabilities_ns.param("min_cvss", "Minimum CVSS score (0-10)", type=float)
     @vulnerabilities_ns.param("min_threat_score", "Minimum threat score (0-100)", type=float)
     @vulnerabilities_ns.param("package", "Filter by package name")
@@ -266,8 +286,7 @@ class VulnerabilityList(Resource):
 
             # Order by threat score (descending), then by creation date
             query = query.order_by(
-                Vulnerability.threat_score.desc().nullslast(),
-                Vulnerability.created_at.desc()
+                Vulnerability.threat_score.desc().nullslast(), Vulnerability.created_at.desc()
             )
 
             # Apply pagination
@@ -401,9 +420,7 @@ class VulnerabilityResource(Resource):
             # Update vulnerability using service
             service = get_vulnerability_service()
             vuln = service.update_vulnerability(
-                vuln_id=uuid_obj,
-                updates=data,
-                recalculate_threat=recalculate
+                vuln_id=uuid_obj, updates=data, recalculate_threat=recalculate
             )
 
             if not vuln:
@@ -513,10 +530,7 @@ class VulnerabilityThreatScore(Resource):
 
             vuln = Vulnerability.query.get(uuid_obj)
             if not vuln:
-                vulnerabilities_ns.abort(
-                    404,
-                    f"Vulnerability {vuln_id} not found"
-                )
+                vulnerabilities_ns.abort(404, f"Vulnerability {vuln_id} not found")
 
             scoring_service = ThreatScoringService()
             score, factors = scoring_service.calculate_threat_score(vuln)
@@ -526,16 +540,11 @@ class VulnerabilityThreatScore(Resource):
                 "threat_score": score,
                 "factors": factors,
                 "severity": vuln.severity,
-                "cvss_score": (
-                    float(vuln.cvss_score) if vuln.cvss_score else None
-                ),
+                "cvss_score": (float(vuln.cvss_score) if vuln.cvss_score else None),
             }, 200
 
         except Exception as e:
-            logger.error(
-                f"Error getting threat score for {vuln_id}: {e}",
-                exc_info=True
-            )
+            logger.error(f"Error getting threat score for {vuln_id}: {e}", exc_info=True)
             vulnerabilities_ns.abort(500, "Internal server error")
 
     @vulnerabilities_ns.doc("recalculate_threat_score", security="apikey")
@@ -561,10 +570,7 @@ class VulnerabilityThreatScore(Resource):
 
             vuln = Vulnerability.query.get(uuid_obj)
             if not vuln:
-                vulnerabilities_ns.abort(
-                    404,
-                    f"Vulnerability {vuln_id} not found"
-                )
+                vulnerabilities_ns.abort(404, f"Vulnerability {vuln_id} not found")
 
             scoring_service = ThreatScoringService()
             score, factors = scoring_service.calculate_threat_score(vuln)
@@ -581,10 +587,7 @@ class VulnerabilityThreatScore(Resource):
             }, 200
 
         except Exception as e:
-            logger.error(
-                f"Error recalculating threat score for {vuln_id}: {e}",
-                exc_info=True
-            )
+            logger.error(f"Error recalculating threat score for {vuln_id}: {e}", exc_info=True)
             db.session.rollback()
             vulnerabilities_ns.abort(500, "Internal server error")
 
@@ -594,18 +597,8 @@ class HighThreatVulnerabilities(Resource):
     """High-threat vulnerabilities resource."""
 
     @vulnerabilities_ns.doc("get_high_threat_vulnerabilities")
-    @vulnerabilities_ns.param(
-        "threshold",
-        "Minimum threat score (0-100)",
-        type=float,
-        default=70.0
-    )
-    @vulnerabilities_ns.param(
-        "limit",
-        "Maximum results",
-        type=int,
-        default=50
-    )
+    @vulnerabilities_ns.param("threshold", "Minimum threat score (0-100)", type=float, default=70.0)
+    @vulnerabilities_ns.param("limit", "Maximum results", type=int, default=50)
     @vulnerabilities_ns.response(200, "Success", [vulnerability_model])
     def get(self):
         """
@@ -620,31 +613,21 @@ class HighThreatVulnerabilities(Resource):
 
             # Validate parameters
             if not 0 <= threshold <= 100:
-                vulnerabilities_ns.abort(
-                    400,
-                    "Threshold must be between 0 and 100"
-                )
+                vulnerabilities_ns.abort(400, "Threshold must be between 0 and 100")
             if not 1 <= limit <= 500:
-                vulnerabilities_ns.abort(
-                    400,
-                    "Limit must be between 1 and 500"
-                )
+                vulnerabilities_ns.abort(400, "Limit must be between 1 and 500")
 
             service = get_vulnerability_service()
             vulns = service.list_high_threat(threshold=threshold, limit=limit)
 
             logger.info(
-                f"Retrieved {len(vulns)} high-threat "
-                f"vulnerabilities (threshold={threshold})"
+                f"Retrieved {len(vulns)} high-threat " f"vulnerabilities (threshold={threshold})"
             )
 
             return [v.to_dict() for v in vulns], 200
 
         except Exception as e:
-            logger.error(
-                f"Error retrieving high-threat vulnerabilities: {e}",
-                exc_info=True
-            )
+            logger.error(f"Error retrieving high-threat vulnerabilities: {e}", exc_info=True)
             vulnerabilities_ns.abort(500, "Internal server error")
 
 
@@ -653,15 +636,8 @@ class VulnerabilityReport(Resource):
     """Vulnerability report generation resource."""
 
     @vulnerabilities_ns.doc("generate_report")
-    @vulnerabilities_ns.param(
-        "severity_levels",
-        "Comma-separated severity levels to include"
-    )
-    @vulnerabilities_ns.param(
-        "min_threat_score",
-        "Minimum threat score",
-        type=float
-    )
+    @vulnerabilities_ns.param("severity_levels", "Comma-separated severity levels to include")
+    @vulnerabilities_ns.param("min_threat_score", "Minimum threat score", type=float)
     @vulnerabilities_ns.param("start_date", "Start date (ISO 8601)")
     @vulnerabilities_ns.param("end_date", "End date (ISO 8601)")
     @vulnerabilities_ns.response(200, "Success")
@@ -676,26 +652,18 @@ class VulnerabilityReport(Resource):
             severity_levels = None
             if request.args.get("severity_levels"):
                 severity_levels = [
-                    s.strip().upper()
-                    for s in request.args.get("severity_levels").split(",")
+                    s.strip().upper() for s in request.args.get("severity_levels").split(",")
                 ]
 
-            min_threat_score = request.args.get(
-                "min_threat_score",
-                type=float
-            )
+            min_threat_score = request.args.get("min_threat_score", type=float)
 
             start_date = None
             if request.args.get("start_date"):
-                start_date = datetime.fromisoformat(
-                    request.args.get("start_date")
-                )
+                start_date = datetime.fromisoformat(request.args.get("start_date"))
 
             end_date = None
             if request.args.get("end_date"):
-                end_date = datetime.fromisoformat(
-                    request.args.get("end_date")
-                )
+                end_date = datetime.fromisoformat(request.args.get("end_date"))
 
             service = get_vulnerability_service()
             report = service.generate_report(
@@ -741,10 +709,13 @@ class VulnerabilityDashboard(Resource):
             total = Vulnerability.query.count()
 
             # Severity breakdown
-            by_severity = db.session.query(
-                Vulnerability.severity,
-                func.count(Vulnerability.id).label("count")
-            ).group_by(Vulnerability.severity).all()
+            by_severity = (
+                db.session.query(
+                    Vulnerability.severity, func.count(Vulnerability.id).label("count")
+                )
+                .group_by(Vulnerability.severity)
+                .all()
+            )
 
             severity_breakdown = {
                 "CRITICAL": 0,
@@ -771,50 +742,45 @@ class VulnerabilityDashboard(Resource):
                     Vulnerability.threat_score >= 90
                 ).count(),
                 "count_high": Vulnerability.query.filter(
-                    Vulnerability.threat_score >= 70,
-                    Vulnerability.threat_score < 90
+                    Vulnerability.threat_score >= 70, Vulnerability.threat_score < 90
                 ).count(),
                 "count_medium": Vulnerability.query.filter(
-                    Vulnerability.threat_score >= 40,
-                    Vulnerability.threat_score < 70
+                    Vulnerability.threat_score >= 40, Vulnerability.threat_score < 70
                 ).count(),
-                "count_low": Vulnerability.query.filter(
-                    Vulnerability.threat_score < 40
-                ).count(),
+                "count_low": Vulnerability.query.filter(Vulnerability.threat_score < 40).count(),
             }
 
             # Recent vulnerabilities (last 10)
-            recent = Vulnerability.query.order_by(
-                Vulnerability.created_at.desc()
-            ).limit(10).all()
+            recent = Vulnerability.query.order_by(Vulnerability.created_at.desc()).limit(10).all()
 
             # High-threat vulnerabilities
-            high_threat = Vulnerability.query.filter(
-                Vulnerability.threat_score >= 70
-            ).order_by(
-                Vulnerability.threat_score.desc()
-            ).limit(10).all()
+            high_threat = (
+                Vulnerability.query.filter(Vulnerability.threat_score >= 70)
+                .order_by(Vulnerability.threat_score.desc())
+                .limit(10)
+                .all()
+            )
 
             # Vulnerability trends (last 7 days)
             seven_days_ago = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
             from datetime import timedelta
+
             seven_days_ago = seven_days_ago - timedelta(days=6)
 
-            daily_trends = db.session.query(
-                func.date(Vulnerability.created_at).label("date"),
-                func.count(Vulnerability.id).label("count")
-            ).filter(
-                Vulnerability.created_at >= seven_days_ago
-            ).group_by(
-                func.date(Vulnerability.created_at)
-            ).order_by(
-                func.date(Vulnerability.created_at)
-            ).all()
+            daily_trends = (
+                db.session.query(
+                    func.date(Vulnerability.created_at).label("date"),
+                    func.count(Vulnerability.id).label("count"),
+                )
+                .filter(Vulnerability.created_at >= seven_days_ago)
+                .group_by(func.date(Vulnerability.created_at))
+                .order_by(func.date(Vulnerability.created_at))
+                .all()
+            )
 
             trends = {
                 "daily_new_vulnerabilities": [
-                    {"date": str(date), "count": count}
-                    for date, count in daily_trends
+                    {"date": str(date), "count": count} for date, count in daily_trends
                 ],
                 "total_last_7_days": sum(count for _, count in daily_trends),
             }
@@ -853,18 +819,17 @@ class VulnerabilityStats(Resource):
 
             total = Vulnerability.query.count()
 
-            by_severity = db.session.query(
-                Vulnerability.severity,
-                func.count(Vulnerability.id).label("count")
-            ).group_by(Vulnerability.severity).all()
+            by_severity = (
+                db.session.query(
+                    Vulnerability.severity, func.count(Vulnerability.id).label("count")
+                )
+                .group_by(Vulnerability.severity)
+                .all()
+            )
 
-            avg_cvss = db.session.query(
-                func.avg(Vulnerability.cvss_score)
-            ).scalar()
+            avg_cvss = db.session.query(func.avg(Vulnerability.cvss_score)).scalar()
 
-            high_threat = Vulnerability.query.filter(
-                Vulnerability.threat_score >= 80
-            ).count()
+            high_threat = Vulnerability.query.filter(Vulnerability.threat_score >= 80).count()
 
             return {
                 "total_vulnerabilities": total,

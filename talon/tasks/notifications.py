@@ -38,7 +38,7 @@ def send_notification_task(self, notification_id: str) -> dict:
 
         # Retry with exponential backoff
         try:
-            self.retry(countdown=60 * (2 ** self.request.retries))
+            self.retry(countdown=60 * (2**self.request.retries))
         except self.MaxRetriesExceededError:
             logger.error(f"Max retries exceeded for notification {notification_id}")
             return {"status": "failed", "message": str(e)}
@@ -123,9 +123,7 @@ def send_daily_summary() -> dict:
     # Get stats for last 24 hours
     yesterday = datetime.utcnow() - timedelta(days=1)
 
-    scans = ScanResult.query.filter(
-        ScanResult.created_at >= yesterday
-    ).all()
+    scans = ScanResult.query.filter(ScanResult.created_at >= yesterday).all()
 
     if not scans:
         return {"status": "skipped", "reason": "No scans in last 24 hours"}

@@ -20,6 +20,7 @@ from uuid import UUID, uuid4
 
 class Severity(str, Enum):
     """Vulnerability severity levels."""
+
     CRITICAL = "CRITICAL"
     HIGH = "HIGH"
     MEDIUM = "MEDIUM"
@@ -29,6 +30,7 @@ class Severity(str, Enum):
 
 class ScanStatus(str, Enum):
     """Scan result status."""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -37,6 +39,7 @@ class ScanStatus(str, Enum):
 
 class GrantStatus(str, Enum):
     """Grant pipeline status."""
+
     PROSPECTING = "prospecting"
     RESEARCHING = "researching"
     DRAFTING = "drafting"
@@ -50,6 +53,7 @@ class GrantStatus(str, Enum):
 
 class Priority(str, Enum):
     """Priority levels."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -58,6 +62,7 @@ class Priority(str, Enum):
 
 class NotificationChannel(str, Enum):
     """Notification delivery channels."""
+
     SMS = "sms"
     EMAIL = "email"
     SLACK = "slack"
@@ -65,6 +70,7 @@ class NotificationChannel(str, Enum):
 
 class NotificationStatus(str, Enum):
     """Notification delivery status."""
+
     PENDING = "pending"
     SENT = "sent"
     FAILED = "failed"
@@ -73,6 +79,7 @@ class NotificationStatus(str, Enum):
 @dataclass(frozen=True)
 class Dependency:
     """Represents a software dependency."""
+
     name: str
     version: str
     ecosystem: str  # npm, pip, composer
@@ -94,6 +101,7 @@ class Dependency:
 @dataclass(frozen=True)
 class VulnerabilityReference:
     """Reference link for a vulnerability."""
+
     url: str
     source: str | None = None
 
@@ -101,6 +109,7 @@ class VulnerabilityReference:
 @dataclass
 class Vulnerability:
     """Represents a security vulnerability (CVE)."""
+
     cve_id: str
     severity: Severity
     description: str = ""
@@ -130,6 +139,7 @@ class Vulnerability:
 @dataclass
 class ScanVulnerability:
     """Vulnerability instance found in a scan."""
+
     cve_id: str
     package_name: str
     installed_version: str
@@ -153,6 +163,7 @@ class ScanVulnerability:
 @dataclass
 class ScanResult:
     """Result of a vulnerability scan."""
+
     id: UUID = field(default_factory=uuid4)
     project_name: str = ""
     package_manager: str = ""
@@ -192,6 +203,7 @@ class ScanResult:
 @dataclass
 class Grant:
     """Represents a grant opportunity."""
+
     id: UUID = field(default_factory=uuid4)
     grant_name: str = ""
     funder: str = ""
@@ -216,7 +228,9 @@ class Grant:
             "currency": self.currency,
             "status": self.status.value,
             "priority": self.priority.value,
-            "submission_deadline": self.submission_deadline.isoformat() if self.submission_deadline else None,
+            "submission_deadline": (
+                self.submission_deadline.isoformat() if self.submission_deadline else None
+            ),
             "decision_date": self.decision_date.isoformat() if self.decision_date else None,
             "description": self.description,
             "requirements": self.requirements,
@@ -237,6 +251,7 @@ class Grant:
 @dataclass
 class Milestone:
     """Grant milestone for tracking progress."""
+
     id: UUID = field(default_factory=uuid4)
     grant_id: UUID = field(default_factory=uuid4)
     milestone_name: str = ""
@@ -262,6 +277,7 @@ class Milestone:
 @dataclass
 class Notification:
     """Notification to be sent through various channels."""
+
     id: UUID = field(default_factory=uuid4)
     notification_type: str = "alert"
     channel: NotificationChannel = NotificationChannel.SLACK
@@ -295,6 +311,7 @@ class Notification:
 @dataclass
 class NonprofitOrganization:
     """Nonprofit organization data record."""
+
     id: UUID = field(default_factory=uuid4)
     ein: str | None = None
     organization_name: str = ""
@@ -332,6 +349,7 @@ class NonprofitOrganization:
 @dataclass
 class APIResponse:
     """Standard API response wrapper."""
+
     success: bool = True
     data: dict | None = None
     error: str | None = None
@@ -351,6 +369,7 @@ class APIResponse:
 @dataclass
 class PaginatedResponse:
     """Paginated API response."""
+
     items: list[dict] = field(default_factory=list)
     total: int = 0
     page: int = 1

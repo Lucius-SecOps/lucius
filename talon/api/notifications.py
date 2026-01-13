@@ -15,27 +15,35 @@ logger = get_logger(__name__)
 notifications_ns = Namespace("notifications", description="Notification management")
 
 # API Models
-notification_input = notifications_ns.model("NotificationInput", {
-    "notification_type": fields.String(required=True, description="Type (alert, report, reminder)"),
-    "channel": fields.String(required=True, description="Channel (sms, email, slack)"),
-    "recipient": fields.String(required=True, description="Recipient address/number"),
-    "subject": fields.String(description="Notification subject"),
-    "body": fields.String(required=True, description="Notification body"),
-    "metadata": fields.Raw(description="Additional metadata"),
-})
+notification_input = notifications_ns.model(
+    "NotificationInput",
+    {
+        "notification_type": fields.String(
+            required=True, description="Type (alert, report, reminder)"
+        ),
+        "channel": fields.String(required=True, description="Channel (sms, email, slack)"),
+        "recipient": fields.String(required=True, description="Recipient address/number"),
+        "subject": fields.String(description="Notification subject"),
+        "body": fields.String(required=True, description="Notification body"),
+        "metadata": fields.Raw(description="Additional metadata"),
+    },
+)
 
-notification_output = notifications_ns.model("NotificationOutput", {
-    "id": fields.String(description="Notification ID"),
-    "notification_type": fields.String(description="Notification type"),
-    "channel": fields.String(description="Delivery channel"),
-    "recipient": fields.String(description="Recipient"),
-    "subject": fields.String(description="Subject"),
-    "body": fields.String(description="Body"),
-    "status": fields.String(description="Status (pending, sent, failed)"),
-    "sent_at": fields.DateTime(description="Sent timestamp"),
-    "error_message": fields.String(description="Error message if failed"),
-    "created_at": fields.DateTime(description="Creation timestamp"),
-})
+notification_output = notifications_ns.model(
+    "NotificationOutput",
+    {
+        "id": fields.String(description="Notification ID"),
+        "notification_type": fields.String(description="Notification type"),
+        "channel": fields.String(description="Delivery channel"),
+        "recipient": fields.String(description="Recipient"),
+        "subject": fields.String(description="Subject"),
+        "body": fields.String(description="Body"),
+        "status": fields.String(description="Status (pending, sent, failed)"),
+        "sent_at": fields.DateTime(description="Sent timestamp"),
+        "error_message": fields.String(description="Error message if failed"),
+        "created_at": fields.DateTime(description="Creation timestamp"),
+    },
+)
 
 
 @notifications_ns.route("")
@@ -139,13 +147,18 @@ class SendAlert(Resource):
     """Send alert notification."""
 
     @notifications_ns.doc("send_alert")
-    @notifications_ns.expect(notifications_ns.model("AlertInput", {
-        "title": fields.String(required=True, description="Alert title"),
-        "message": fields.String(required=True, description="Alert message"),
-        "severity": fields.String(description="Alert severity", default="high"),
-        "channels": fields.List(fields.String, description="Channels to send to"),
-        "recipients": fields.Raw(description="Recipients by channel"),
-    }))
+    @notifications_ns.expect(
+        notifications_ns.model(
+            "AlertInput",
+            {
+                "title": fields.String(required=True, description="Alert title"),
+                "message": fields.String(required=True, description="Alert message"),
+                "severity": fields.String(description="Alert severity", default="high"),
+                "channels": fields.List(fields.String, description="Channels to send to"),
+                "recipients": fields.Raw(description="Recipients by channel"),
+            },
+        )
+    )
     def post(self):
         """Send an alert to multiple channels."""
         data = request.json
@@ -176,15 +189,17 @@ class NotificationStats(Resource):
 
         total = Notification.query.count()
 
-        by_status = db.session.query(
-            Notification.status,
-            func.count(Notification.id).label("count")
-        ).group_by(Notification.status).all()
+        by_status = (
+            db.session.query(Notification.status, func.count(Notification.id).label("count"))
+            .group_by(Notification.status)
+            .all()
+        )
 
-        by_channel = db.session.query(
-            Notification.channel,
-            func.count(Notification.id).label("count")
-        ).group_by(Notification.channel).all()
+        by_channel = (
+            db.session.query(Notification.channel, func.count(Notification.id).label("count"))
+            .group_by(Notification.channel)
+            .all()
+        )
 
         return {
             "total_notifications": total,

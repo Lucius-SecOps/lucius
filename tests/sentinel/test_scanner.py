@@ -45,9 +45,7 @@ class TestVulnerabilityScanner:
         assert results is not None
         assert results.total_dependencies == 0
 
-    def test_scan_directory_with_requirements(
-        self, scanner, mock_nvd_client, tmp_path
-    ):
+    def test_scan_directory_with_requirements(self, scanner, mock_nvd_client, tmp_path):
         """Test scanning directory with requirements.txt."""
         requirements = tmp_path / "requirements.txt"
         requirements.write_text("flask==2.3.0\nrequests==2.28.0\n")
@@ -59,9 +57,7 @@ class TestVulnerabilityScanner:
 
         assert results is not None
 
-    def test_scan_directory_with_vulnerabilities(
-        self, scanner, mock_nvd_client, tmp_path
-    ):
+    def test_scan_directory_with_vulnerabilities(self, scanner, mock_nvd_client, tmp_path):
         """Test scanning directory that has vulnerable packages."""
         requirements = tmp_path / "requirements.txt"
         requirements.write_text("lodash==4.17.0\n")
@@ -86,21 +82,16 @@ class TestVulnerabilityScanner:
         (tmp_path / "requirements.txt").write_text("flask==2.3.0\n")
 
         # NPM packages
-        (tmp_path / "package-lock.json").write_text(json.dumps({
-            "name": "test",
-            "packages": {
-                "node_modules/express": {
-                    "version": "4.18.0"
-                }
-            }
-        }))
+        (tmp_path / "package-lock.json").write_text(
+            json.dumps(
+                {"name": "test", "packages": {"node_modules/express": {"version": "4.18.0"}}}
+            )
+        )
 
         # PHP composer
-        (tmp_path / "composer.lock").write_text(json.dumps({
-            "packages": [
-                {"name": "vendor/package", "version": "1.0.0"}
-            ]
-        }))
+        (tmp_path / "composer.lock").write_text(
+            json.dumps({"packages": [{"name": "vendor/package", "version": "1.0.0"}]})
+        )
 
         mock_nvd_client.search_vulnerabilities.return_value = []
 
@@ -163,10 +154,7 @@ class TestTalonIntegration:
 
     def test_submit_scan_results(self, mock_talon):
         """Test submitting scan results to Talon."""
-        mock_talon.submit_scan.return_value = {
-            "scan_id": "test-123",
-            "status": "processing"
-        }
+        mock_talon.submit_scan.return_value = {"scan_id": "test-123", "status": "processing"}
 
         # Should successfully submit
 
@@ -174,7 +162,7 @@ class TestTalonIntegration:
         """Test retry logic when Talon submission fails."""
         mock_talon.submit_scan.side_effect = [
             Exception("Connection failed"),
-            {"scan_id": "test-123", "status": "processing"}
+            {"scan_id": "test-123", "status": "processing"},
         ]
 
         # Should retry and succeed
@@ -193,11 +181,7 @@ class TestProgressTracking:
         progress_updates = []
 
         def callback(current, total, message):
-            progress_updates.append({
-                "current": current,
-                "total": total,
-                "message": message
-            })
+            progress_updates.append({"current": current, "total": total, "message": message})
 
         # Scanner should call callback
 

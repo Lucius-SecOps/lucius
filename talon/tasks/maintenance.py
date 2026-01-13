@@ -24,9 +24,7 @@ def cleanup_old_scans(days_to_keep: int = 90) -> dict:
     cutoff = datetime.utcnow() - timedelta(days=days_to_keep)
 
     # Count before deletion
-    old_scans = ScanResult.query.filter(
-        ScanResult.created_at < cutoff
-    ).count()
+    old_scans = ScanResult.query.filter(ScanResult.created_at < cutoff).count()
 
     if old_scans == 0:
         return {"deleted": 0}
@@ -38,9 +36,7 @@ def cleanup_old_scans(days_to_keep: int = 90) -> dict:
     batch_size = 100
 
     while True:
-        batch = ScanResult.query.filter(
-            ScanResult.created_at < cutoff
-        ).limit(batch_size).all()
+        batch = ScanResult.query.filter(ScanResult.created_at < cutoff).limit(batch_size).all()
 
         if not batch:
             break

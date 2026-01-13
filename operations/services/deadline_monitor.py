@@ -82,10 +82,14 @@ class DeadlineMonitor:
         """Get grants with passed deadlines that aren't closed."""
         now = datetime.utcnow()
 
-        return self.session.query(Grant).filter(
-            Grant.submission_deadline < now,
-            Grant.status.notin_(["submitted", "under_review", "awarded", "rejected", "closed"]),
-        ).all()
+        return (
+            self.session.query(Grant)
+            .filter(
+                Grant.submission_deadline < now,
+                Grant.status.notin_(["submitted", "under_review", "awarded", "rejected", "closed"]),
+            )
+            .all()
+        )
 
     def get_upcoming_milestones(self, days: int = 7) -> list[tuple[GrantMilestone, int]]:
         """Get upcoming milestones."""

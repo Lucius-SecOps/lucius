@@ -10,8 +10,7 @@ class DatabaseConfig:
 
     url: str = field(
         default_factory=lambda: os.getenv(
-            "DATABASE_URL",
-            "postgresql://lucius:lucius_secret@localhost:5432/lucius_db"
+            "DATABASE_URL", "postgresql://lucius:lucius_secret@localhost:5432/lucius_db"
         )
     )
     pool_size: int = 5
@@ -25,9 +24,7 @@ class TalonConfig:
     api_url: str = field(
         default_factory=lambda: os.getenv("TALON_API_URL", "http://localhost:5000")
     )
-    api_key: str | None = field(
-        default_factory=lambda: os.getenv("TALON_API_KEY")
-    )
+    api_key: str | None = field(default_factory=lambda: os.getenv("TALON_API_KEY"))
     timeout: int = 30
 
 
@@ -35,15 +32,9 @@ class TalonConfig:
 class TwilioConfig:
     """Twilio SMS configuration."""
 
-    account_sid: str | None = field(
-        default_factory=lambda: os.getenv("TWILIO_ACCOUNT_SID")
-    )
-    auth_token: str | None = field(
-        default_factory=lambda: os.getenv("TWILIO_AUTH_TOKEN")
-    )
-    from_number: str | None = field(
-        default_factory=lambda: os.getenv("TWILIO_FROM_NUMBER")
-    )
+    account_sid: str | None = field(default_factory=lambda: os.getenv("TWILIO_ACCOUNT_SID"))
+    auth_token: str | None = field(default_factory=lambda: os.getenv("TWILIO_AUTH_TOKEN"))
+    from_number: str | None = field(default_factory=lambda: os.getenv("TWILIO_FROM_NUMBER"))
 
     @property
     def is_configured(self) -> bool:

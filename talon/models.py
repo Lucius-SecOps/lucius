@@ -73,7 +73,9 @@ class ScanResult(db.Model):
     completed_at = Column(DateTime(timezone=True))
 
     # Relationships
-    vulnerabilities = relationship("ScanVulnerability", back_populates="scan", cascade="all, delete-orphan")
+    vulnerabilities = relationship(
+        "ScanVulnerability", back_populates="scan", cascade="all, delete-orphan"
+    )
 
     def to_dict(self, include_vulnerabilities: bool = False) -> dict:
         """Convert to dictionary."""
@@ -108,7 +110,9 @@ class ScanVulnerability(db.Model):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     scan_id = Column(UUID(as_uuid=True), ForeignKey("scan_results.id", ondelete="CASCADE"))
-    vulnerability_id = Column(UUID(as_uuid=True), ForeignKey("vulnerabilities.id", ondelete="CASCADE"))
+    vulnerability_id = Column(
+        UUID(as_uuid=True), ForeignKey("vulnerabilities.id", ondelete="CASCADE")
+    )
     package_name = Column(String(255), nullable=False)
     installed_version = Column(String(100))
     fixed_version = Column(String(100))

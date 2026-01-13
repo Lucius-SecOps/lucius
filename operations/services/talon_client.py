@@ -121,14 +121,13 @@ class TalonClient:
         funder: str,
     ) -> None:
         """Report upcoming deadline to Talon for alerting."""
-        severity = "critical" if days_remaining <= 3 else "high" if days_remaining <= 7 else "medium"
+        severity = (
+            "critical" if days_remaining <= 3 else "high" if days_remaining <= 7 else "medium"
+        )
 
         self.send_alert(
             title=f"Grant Deadline: {grant_name}",
-            message=(
-                f"*{grant_name}* deadline in {days_remaining} days\n"
-                f"Funder: {funder}"
-            ),
+            message=(f"*{grant_name}* deadline in {days_remaining} days\n" f"Funder: {funder}"),
             severity=severity,
             channels=["slack"],
         )

@@ -32,6 +32,7 @@ class TestDeadlineMonitor:
                 mock_config.enable_sms_alerts = True
 
                 from operations.services.deadline_monitor import DeadlineMonitor
+
                 return DeadlineMonitor()
 
     def test_check_grant_deadlines_none_approaching(self, monitor, mock_session):
@@ -49,9 +50,7 @@ class TestDeadlineMonitor:
         urgent_grant.deadline = date.today() + timedelta(days=2)
         urgent_grant.amount = Decimal("50000")
 
-        mock_session.query.return_value.filter.return_value.all.return_value = [
-            urgent_grant
-        ]
+        mock_session.query.return_value.filter.return_value.all.return_value = [urgent_grant]
 
         # Should trigger urgent notification
 
@@ -65,9 +64,7 @@ class TestDeadlineMonitor:
         overdue_milestone.grant = MagicMock()
         overdue_milestone.grant.grant_name = "Parent Grant"
 
-        mock_session.query.return_value.filter.return_value.all.return_value = [
-            overdue_milestone
-        ]
+        mock_session.query.return_value.filter.return_value.all.return_value = [overdue_milestone]
 
         # Should flag overdue milestone
 

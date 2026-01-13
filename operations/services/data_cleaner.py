@@ -21,7 +21,13 @@ class DataCleaner:
     # Common fields mapping
     FIELD_MAPPINGS = {
         "ein": ["ein", "tax_id", "taxid", "employer_id", "irs_ein"],
-        "organization_name": ["name", "org_name", "organization", "legal_name", "organization_name"],
+        "organization_name": [
+            "name",
+            "org_name",
+            "organization",
+            "legal_name",
+            "organization_name",
+        ],
         "dba_name": ["dba", "dba_name", "doing_business_as", "trade_name"],
         "phone": ["phone", "telephone", "phone_number", "contact_phone"],
         "email": ["email", "contact_email", "email_address"],
@@ -354,10 +360,7 @@ class DataCleaner:
             phone = phonenumbers.parse(str(value), "US")
 
             if phonenumbers.is_valid_number(phone):
-                return phonenumbers.format_number(
-                    phone,
-                    phonenumbers.PhoneNumberFormat.E164
-                )
+                return phonenumbers.format_number(phone, phonenumbers.PhoneNumberFormat.E164)
         except Exception:
             pass
 
@@ -404,12 +407,13 @@ class DataCleaner:
 
         # Basic URL validation
         url_pattern = re.compile(
-            r'^https?://'
-            r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?|'
-            r'localhost|'
-            r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'
-            r'(?::\d+)?'
-            r'(?:/?|[/?]\S+)$', re.IGNORECASE
+            r"^https?://"
+            r"(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?|"
+            r"localhost|"
+            r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})"
+            r"(?::\d+)?"
+            r"(?:/?|[/?]\S+)$",
+            re.IGNORECASE,
         )
 
         return url if url_pattern.match(url) else None
@@ -457,8 +461,14 @@ class DataCleaner:
     def _calculate_quality_score(self, data: dict[str, Any]) -> float:
         """Calculate data quality score (0-100)."""
         fields = [
-            "ein", "organization_name", "phone", "email", "website",
-            "address", "mission_statement", "ntee_code",
+            "ein",
+            "organization_name",
+            "phone",
+            "email",
+            "website",
+            "address",
+            "mission_statement",
+            "ntee_code",
         ]
 
         present = sum(1 for f in fields if data.get(f))
@@ -486,8 +496,17 @@ class DataCleaner:
 
     def _update_nonprofit(self, nonprofit: NonprofitData, data: dict[str, Any]) -> None:
         """Update existing nonprofit with new data."""
-        for field in ["dba_name", "phone", "email", "website", "mission_statement",
-                      "ntee_code", "asset_amount", "income_amount", "revenue_amount"]:
+        for field in [
+            "dba_name",
+            "phone",
+            "email",
+            "website",
+            "mission_statement",
+            "ntee_code",
+            "asset_amount",
+            "income_amount",
+            "revenue_amount",
+        ]:
             if data.get(field):
                 setattr(nonprofit, field, data[field])
 

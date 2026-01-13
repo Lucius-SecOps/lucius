@@ -33,13 +33,29 @@ def cli(ctx: click.Context, verbose: bool) -> None:
 
 @cli.command()
 @click.argument("path", type=click.Path(exists=True), default=".")
-@click.option("--package-manager", "-p", type=click.Choice(["npm", "pip", "composer", "auto"]),
-              default="auto", help="Package manager to scan")
+@click.option(
+    "--package-manager",
+    "-p",
+    type=click.Choice(["npm", "pip", "composer", "auto"]),
+    default="auto",
+    help="Package manager to scan",
+)
 @click.option("--output", "-o", type=click.Path(), help="Output file path")
-@click.option("--format", "-f", "output_format", type=click.Choice(["json", "table", "cyclonedx", "spdx"]),
-              default="table", help="Output format")
-@click.option("--severity", "-s", type=click.Choice(["low", "medium", "high", "critical"]),
-              default="low", help="Minimum severity to report")
+@click.option(
+    "--format",
+    "-f",
+    "output_format",
+    type=click.Choice(["json", "table", "cyclonedx", "spdx"]),
+    default="table",
+    help="Output format",
+)
+@click.option(
+    "--severity",
+    "-s",
+    type=click.Choice(["low", "medium", "high", "critical"]),
+    default="low",
+    help="Minimum severity to report",
+)
 @click.option("--include-dev", is_flag=True, help="Include dev dependencies")
 @click.option("--post-to-talon", is_flag=True, help="Post results to Talon API")
 @click.pass_context
@@ -60,13 +76,15 @@ def scan(
 
     try:
         # Run the async scan
-        result = asyncio.run(_run_scan(
-            project_path=project_path,
-            package_manager=package_manager,
-            severity=severity,
-            include_dev=include_dev,
-            post_to_talon=post_to_talon,
-        ))
+        result = asyncio.run(
+            _run_scan(
+                project_path=project_path,
+                package_manager=package_manager,
+                severity=severity,
+                include_dev=include_dev,
+                post_to_talon=post_to_talon,
+            )
+        )
 
         # Output results
         if output_format == "table":
@@ -213,8 +231,14 @@ def _display_table(result: dict) -> None:
 
 @cli.command()
 @click.argument("path", type=click.Path(exists=True), default=".")
-@click.option("--format", "-f", "output_format", type=click.Choice(["cyclonedx", "spdx"]),
-              default="cyclonedx", help="SBOM format")
+@click.option(
+    "--format",
+    "-f",
+    "output_format",
+    type=click.Choice(["cyclonedx", "spdx"]),
+    default="cyclonedx",
+    help="SBOM format",
+)
 @click.option("--output", "-o", type=click.Path(), required=True, help="Output file path")
 @click.pass_context
 def sbom(ctx: click.Context, path: str, output_format: str, output: str) -> None:

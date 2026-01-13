@@ -15,45 +15,56 @@ logger = get_logger(__name__)
 scans_ns = Namespace("scans", description="Vulnerability scan operations")
 
 # API Models
-vulnerability_model = scans_ns.model("Vulnerability", {
-    "cve_id": fields.String(required=True, description="CVE identifier"),
-    "package_name": fields.String(required=True, description="Affected package name"),
-    "installed_version": fields.String(description="Installed version"),
-    "severity": fields.String(description="Severity level"),
-    "cvss_score": fields.Float(description="CVSS score"),
-    "description": fields.String(description="Vulnerability description"),
-    "fixed_version": fields.String(description="Version with fix"),
-})
+vulnerability_model = scans_ns.model(
+    "Vulnerability",
+    {
+        "cve_id": fields.String(required=True, description="CVE identifier"),
+        "package_name": fields.String(required=True, description="Affected package name"),
+        "installed_version": fields.String(description="Installed version"),
+        "severity": fields.String(description="Severity level"),
+        "cvss_score": fields.Float(description="CVSS score"),
+        "description": fields.String(description="Vulnerability description"),
+        "fixed_version": fields.String(description="Version with fix"),
+    },
+)
 
-scan_input_model = scans_ns.model("ScanInput", {
-    "project_name": fields.String(required=True, description="Project name"),
-    "package_manager": fields.String(required=True, description="Package manager (npm, pip, composer)"),
-    "scan_type": fields.String(description="Scan type", default="dependency"),
-    "total_dependencies": fields.Integer(description="Total dependencies scanned"),
-    "vulnerable_count": fields.Integer(description="Number of vulnerable packages"),
-    "critical_count": fields.Integer(description="Critical severity count"),
-    "high_count": fields.Integer(description="High severity count"),
-    "medium_count": fields.Integer(description="Medium severity count"),
-    "low_count": fields.Integer(description="Low severity count"),
-    "vulnerabilities": fields.List(fields.Nested(vulnerability_model)),
-    "scan_metadata": fields.Raw(description="Additional scan metadata"),
-})
+scan_input_model = scans_ns.model(
+    "ScanInput",
+    {
+        "project_name": fields.String(required=True, description="Project name"),
+        "package_manager": fields.String(
+            required=True, description="Package manager (npm, pip, composer)"
+        ),
+        "scan_type": fields.String(description="Scan type", default="dependency"),
+        "total_dependencies": fields.Integer(description="Total dependencies scanned"),
+        "vulnerable_count": fields.Integer(description="Number of vulnerable packages"),
+        "critical_count": fields.Integer(description="Critical severity count"),
+        "high_count": fields.Integer(description="High severity count"),
+        "medium_count": fields.Integer(description="Medium severity count"),
+        "low_count": fields.Integer(description="Low severity count"),
+        "vulnerabilities": fields.List(fields.Nested(vulnerability_model)),
+        "scan_metadata": fields.Raw(description="Additional scan metadata"),
+    },
+)
 
-scan_output_model = scans_ns.model("ScanOutput", {
-    "id": fields.String(description="Scan ID"),
-    "project_name": fields.String(description="Project name"),
-    "package_manager": fields.String(description="Package manager"),
-    "scan_type": fields.String(description="Scan type"),
-    "total_dependencies": fields.Integer(description="Total dependencies"),
-    "vulnerable_count": fields.Integer(description="Vulnerable count"),
-    "critical_count": fields.Integer(description="Critical count"),
-    "high_count": fields.Integer(description="High count"),
-    "medium_count": fields.Integer(description="Medium count"),
-    "low_count": fields.Integer(description="Low count"),
-    "status": fields.String(description="Scan status"),
-    "created_at": fields.DateTime(description="Creation timestamp"),
-    "completed_at": fields.DateTime(description="Completion timestamp"),
-})
+scan_output_model = scans_ns.model(
+    "ScanOutput",
+    {
+        "id": fields.String(description="Scan ID"),
+        "project_name": fields.String(description="Project name"),
+        "package_manager": fields.String(description="Package manager"),
+        "scan_type": fields.String(description="Scan type"),
+        "total_dependencies": fields.Integer(description="Total dependencies"),
+        "vulnerable_count": fields.Integer(description="Vulnerable count"),
+        "critical_count": fields.Integer(description="Critical count"),
+        "high_count": fields.Integer(description="High count"),
+        "medium_count": fields.Integer(description="Medium count"),
+        "low_count": fields.Integer(description="Low count"),
+        "status": fields.String(description="Scan status"),
+        "created_at": fields.DateTime(description="Creation timestamp"),
+        "completed_at": fields.DateTime(description="Completion timestamp"),
+    },
+)
 
 
 @scans_ns.route("")
@@ -178,9 +189,7 @@ class ScanStats(Resource):
             func.sum(ScanResult.low_count).label("low"),
         ).first()
 
-        recent_scans = ScanResult.query.order_by(
-            ScanResult.created_at.desc()
-        ).limit(5).all()
+        recent_scans = ScanResult.query.order_by(ScanResult.created_at.desc()).limit(5).all()
 
         return {
             "total_scans": total_scans,

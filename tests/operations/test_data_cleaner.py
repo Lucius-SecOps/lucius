@@ -13,6 +13,7 @@ class TestDataCleaner:
         """Create data cleaner instance."""
         with patch("operations.services.data_cleaner.pd"):
             from operations.services.data_cleaner import DataCleaner
+
             return DataCleaner()
 
     def test_clean_ein_valid(self, cleaner):
@@ -102,18 +103,20 @@ class TestDataCleaner:
         import pandas as pd
 
         # High quality row
-        high_quality = pd.Series({
-            "organization_name": "Test Org",
-            "ein": "12-3456789",
-            "email": "test@example.com",
-            "phone": "(555) 123-4567",
-            "website": "https://example.com",
-            "street": "123 Main St",
-            "city": "New York",
-            "state": "NY",
-            "zip": "10001",
-            "mission_statement": "Our mission is to help.",
-        })
+        high_quality = pd.Series(
+            {
+                "organization_name": "Test Org",
+                "ein": "12-3456789",
+                "email": "test@example.com",
+                "phone": "(555) 123-4567",
+                "website": "https://example.com",
+                "street": "123 Main St",
+                "city": "New York",
+                "state": "NY",
+                "zip": "10001",
+                "mission_statement": "Our mission is to help.",
+            }
+        )
 
         score = cleaner._calculate_quality_score(high_quality)
         assert score > 80  # Should be high quality
@@ -122,13 +125,15 @@ class TestDataCleaner:
         """Test row validation with valid data."""
         import pandas as pd
 
-        valid_row = pd.Series({
-            "ein": "12-3456789",
-            "organization_name": "Valid Organization",
-            "email": "valid@example.com",
-            "phone": "(555) 123-4567",
-            "website": "https://example.com",
-        })
+        valid_row = pd.Series(
+            {
+                "ein": "12-3456789",
+                "organization_name": "Valid Organization",
+                "email": "valid@example.com",
+                "phone": "(555) 123-4567",
+                "website": "https://example.com",
+            }
+        )
 
         issues = cleaner._validate_row(valid_row)
         assert len(issues) == 0
@@ -137,13 +142,15 @@ class TestDataCleaner:
         """Test row validation with invalid data."""
         import pandas as pd
 
-        invalid_row = pd.Series({
-            "ein": "invalid",
-            "organization_name": "",
-            "email": "bademail",
-            "phone": "123",
-            "website": "not a url",
-        })
+        invalid_row = pd.Series(
+            {
+                "ein": "invalid",
+                "organization_name": "",
+                "email": "bademail",
+                "phone": "123",
+                "website": "not a url",
+            }
+        )
 
         issues = cleaner._validate_row(invalid_row)
         assert len(issues) > 0

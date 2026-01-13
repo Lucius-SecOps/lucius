@@ -47,11 +47,16 @@ class GrantRepository:
         end_date: datetime,
     ) -> list[Grant]:
         """Get grants within deadline range."""
-        return self.session.query(Grant).filter(
-            Grant.submission_deadline >= start_date,
-            Grant.submission_deadline <= end_date,
-            Grant.status.notin_(["awarded", "rejected", "closed"]),
-        ).order_by(Grant.submission_deadline.asc()).all()
+        return (
+            self.session.query(Grant)
+            .filter(
+                Grant.submission_deadline >= start_date,
+                Grant.submission_deadline <= end_date,
+                Grant.status.notin_(["awarded", "rejected", "closed"]),
+            )
+            .order_by(Grant.submission_deadline.asc())
+            .all()
+        )
 
     def create(self, grant: Grant) -> Grant:
         """Create a new grant."""
@@ -85,20 +90,28 @@ class MilestoneRepository:
         """Get milestones for a grant."""
         if isinstance(grant_id, str):
             grant_id = UUID(grant_id)
-        return self.session.query(GrantMilestone).filter(
-            GrantMilestone.grant_id == grant_id
-        ).order_by(GrantMilestone.due_date.asc()).all()
+        return (
+            self.session.query(GrantMilestone)
+            .filter(GrantMilestone.grant_id == grant_id)
+            .order_by(GrantMilestone.due_date.asc())
+            .all()
+        )
 
     def get_upcoming(self, days: int = 7) -> list[GrantMilestone]:
         """Get upcoming milestones."""
         now = datetime.utcnow()
         end_date = now + timedelta(days=days)
 
-        return self.session.query(GrantMilestone).filter(
-            GrantMilestone.due_date >= now,
-            GrantMilestone.due_date <= end_date,
-            GrantMilestone.status != "completed",
-        ).order_by(GrantMilestone.due_date.asc()).all()
+        return (
+            self.session.query(GrantMilestone)
+            .filter(
+                GrantMilestone.due_date >= now,
+                GrantMilestone.due_date <= end_date,
+                GrantMilestone.status != "completed",
+            )
+            .order_by(GrantMilestone.due_date.asc())
+            .all()
+        )
 
     def create(self, milestone: GrantMilestone) -> GrantMilestone:
         """Create a new milestone."""

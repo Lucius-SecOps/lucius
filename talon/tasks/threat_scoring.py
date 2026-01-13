@@ -28,12 +28,16 @@ def update_threat_scores() -> dict:
 
     cutoff = datetime.utcnow() - timedelta(hours=24)
 
-    vulnerabilities = Vulnerability.query.filter(
-        db.or_(
-            Vulnerability.threat_score.is_(None),
-            Vulnerability.updated_at < cutoff,
+    vulnerabilities = (
+        Vulnerability.query.filter(
+            db.or_(
+                Vulnerability.threat_score.is_(None),
+                Vulnerability.updated_at < cutoff,
+            )
         )
-    ).limit(500).all()
+        .limit(500)
+        .all()
+    )
 
     if not vulnerabilities:
         return {"updated": 0}
@@ -97,11 +101,12 @@ def identify_high_threat_vulnerabilities(threshold: float = 70.0) -> dict:
     Returns:
         List of high-threat CVEs
     """
-    high_threat = Vulnerability.query.filter(
-        Vulnerability.threat_score >= threshold
-    ).order_by(
-        Vulnerability.threat_score.desc()
-    ).limit(100).all()
+    high_threat = (
+        Vulnerability.query.filter(Vulnerability.threat_score >= threshold)
+        .order_by(Vulnerability.threat_score.desc())
+        .limit(100)
+        .all()
+    )
 
     return {
         "count": len(high_threat),

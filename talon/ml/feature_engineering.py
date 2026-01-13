@@ -32,17 +32,49 @@ class VulnerabilityFeatureExtractor:
     # Known popular packages (simplified - extend with actual data)
     POPULAR_PACKAGES = {
         # JavaScript/Node.js
-        "react", "lodash", "express", "axios", "webpack", "moment",
-        "request", "commander", "debug", "chalk", "jquery", "angular",
+        "react",
+        "lodash",
+        "express",
+        "axios",
+        "webpack",
+        "moment",
+        "request",
+        "commander",
+        "debug",
+        "chalk",
+        "jquery",
+        "angular",
         # Python
-        "requests", "numpy", "pandas", "django", "flask", "tensorflow",
-        "scipy", "matplotlib", "urllib3", "certifi", "setuptools",
+        "requests",
+        "numpy",
+        "pandas",
+        "django",
+        "flask",
+        "tensorflow",
+        "scipy",
+        "matplotlib",
+        "urllib3",
+        "certifi",
+        "setuptools",
         # Java
-        "log4j", "spring-boot", "jackson", "junit", "slf4j", "guava",
+        "log4j",
+        "spring-boot",
+        "jackson",
+        "junit",
+        "slf4j",
+        "guava",
         # PHP
-        "symfony", "laravel", "guzzle", "monolog", "phpunit",
+        "symfony",
+        "laravel",
+        "guzzle",
+        "monolog",
+        "phpunit",
         # Ruby
-        "rails", "bundler", "rack", "puma", "devise",
+        "rails",
+        "bundler",
+        "rack",
+        "puma",
+        "devise",
     }
 
     # Known exploit databases/keywords
@@ -58,9 +90,7 @@ class VulnerabilityFeatureExtractor:
     ]
 
     def extract_features(
-        self,
-        vulnerability: Vulnerability,
-        package_stats: dict | None = None
+        self, vulnerability: Vulnerability, package_stats: dict | None = None
     ) -> dict[str, float]:
         """
         Extract all features from a vulnerability.
@@ -76,48 +106,23 @@ class VulnerabilityFeatureExtractor:
             # Core CVSS features
             "cvss_score": self._extract_cvss_score(vulnerability),
             "cvss_impact": self._extract_cvss_impact(vulnerability),
-            "cvss_exploitability": self._extract_cvss_exploitability(
-                vulnerability
-            ),
-
+            "cvss_exploitability": self._extract_cvss_exploitability(vulnerability),
             # Package features
-            "package_popularity": self._extract_package_popularity(
-                vulnerability,
-                package_stats
-            ),
-            "affected_packages_count": self._extract_affected_count(
-                vulnerability
-            ),
-
+            "package_popularity": self._extract_package_popularity(vulnerability, package_stats),
+            "affected_packages_count": self._extract_affected_count(vulnerability),
             # Exploit features
-            "exploit_availability": self._extract_exploit_availability(
-                vulnerability
-            ),
-            "exploit_complexity": self._extract_exploit_complexity(
-                vulnerability
-            ),
-
+            "exploit_availability": self._extract_exploit_availability(vulnerability),
+            "exploit_complexity": self._extract_exploit_complexity(vulnerability),
             # Temporal features
             "cve_age_days": self._extract_cve_age(vulnerability),
             "cve_freshness": self._extract_cve_freshness(vulnerability),
-
             # Attention features
             "reference_count": self._extract_reference_count(vulnerability),
-            "has_nvd_reference": self._extract_has_nvd_reference(
-                vulnerability
-            ),
-
+            "has_nvd_reference": self._extract_has_nvd_reference(vulnerability),
             # Attack vector features
-            "is_network_attack": self._extract_is_network_attack(
-                vulnerability
-            ),
-            "requires_privileges": self._extract_requires_privileges(
-                vulnerability
-            ),
-            "requires_user_interaction": self._extract_requires_ui(
-                vulnerability
-            ),
-
+            "is_network_attack": self._extract_is_network_attack(vulnerability),
+            "requires_privileges": self._extract_requires_privileges(vulnerability),
+            "requires_user_interaction": self._extract_requires_ui(vulnerability),
             # Severity features
             "is_critical": float(vulnerability.severity == "CRITICAL"),
             "is_high": float(vulnerability.severity == "HIGH"),
@@ -126,9 +131,7 @@ class VulnerabilityFeatureExtractor:
         return features
 
     def extract_features_batch(
-        self,
-        vulnerabilities: list[Vulnerability],
-        package_stats: dict | None = None
+        self, vulnerabilities: list[Vulnerability], package_stats: dict | None = None
     ) -> np.ndarray:
         """
         Extract features for multiple vulnerabilities.
@@ -210,11 +213,7 @@ class VulnerabilityFeatureExtractor:
 
         return score
 
-    def _extract_package_popularity(
-        self,
-        vuln: Vulnerability,
-        package_stats: dict | None
-    ) -> float:
+    def _extract_package_popularity(self, vuln: Vulnerability, package_stats: dict | None) -> float:
         """
         Extract package popularity score.
 

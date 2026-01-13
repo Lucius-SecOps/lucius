@@ -32,12 +32,11 @@ def train_synthetic(args):
 
     # Generate synthetic data
     logger.info(f"Generating {args.n_samples} synthetic training samples...")
-    vulnerabilities, scores = trainer.generate_synthetic_training_data(
-        n_samples=args.n_samples
-    )
+    vulnerabilities, scores = trainer.generate_synthetic_training_data(n_samples=args.n_samples)
 
     logger.info("Score distribution:")
     import numpy as np
+
     logger.info(f"  Min: {np.min(scores):.2f}")
     logger.info(f"  Max: {np.max(scores):.2f}")
     logger.info(f"  Mean: {np.mean(scores):.2f}")
@@ -65,11 +64,7 @@ def train_synthetic(args):
     # Feature importance
     logger.info("\nTop 10 Feature Importances:")
     importance = model.get_feature_importance()
-    sorted_features = sorted(
-        importance.items(),
-        key=lambda x: x[1],
-        reverse=True
-    )
+    sorted_features = sorted(importance.items(), key=lambda x: x[1], reverse=True)
     for feature, score in sorted_features[:10]:
         logger.info(f"  {feature:30s}: {score:.4f}")
 
@@ -95,9 +90,7 @@ def train_from_database(args):
     app = create_app()
     with app.app_context():
         # Load vulnerabilities with existing threat scores
-        vulnerabilities = Vulnerability.query.filter(
-            Vulnerability.threat_score.isnot(None)
-        ).all()
+        vulnerabilities = Vulnerability.query.filter(Vulnerability.threat_score.isnot(None)).all()
 
         if len(vulnerabilities) < 100:
             logger.warning(
@@ -161,11 +154,7 @@ def evaluate_model(args):
     # Feature importance
     logger.info("\nFeature Importances:")
     importance = scorer.get_feature_importance()
-    sorted_features = sorted(
-        importance.items(),
-        key=lambda x: x[1],
-        reverse=True
-    )
+    sorted_features = sorted(importance.items(), key=lambda x: x[1], reverse=True)
     for feature, score in sorted_features:
         bar = "█" * int(score * 50)
         logger.info(f"  {feature:30s}: {bar} {score:.4f}")
@@ -173,9 +162,7 @@ def evaluate_model(args):
     # Generate test data for evaluation
     logger.info("\nGenerating test data for evaluation...")
     trainer = ThreatModelTrainer()
-    test_vulns, test_scores = trainer.generate_synthetic_training_data(
-        n_samples=200
-    )
+    test_vulns, test_scores = trainer.generate_synthetic_training_data(n_samples=200)
 
     # Evaluate
     logger.info("Running evaluation...")
@@ -206,74 +193,50 @@ def evaluate_model(args):
 
 def main():
     """Main CLI entry point."""
-    parser = argparse.ArgumentParser(
-        description="Train and evaluate threat scoring models"
-    )
+    parser = argparse.ArgumentParser(description="Train and evaluate threat scoring models")
 
     subparsers = parser.add_subparsers(dest="command", help="Command to run")
 
     # Train synthetic
     train_syn_parser = subparsers.add_parser(
-        "train-synthetic",
-        help="Train model on synthetic data"
+        "train-synthetic", help="Train model on synthetic data"
     )
     train_syn_parser.add_argument(
-        "--n-samples",
-        type=int,
-        default=1000,
-        help="Number of synthetic samples to generate"
+        "--n-samples", type=int, default=1000, help="Number of synthetic samples to generate"
     )
     train_syn_parser.add_argument(
         "--model-type",
         choices=["random_forest", "gradient_boosting"],
         default="random_forest",
-        help="Type of model to train"
+        help="Type of model to train",
     )
     train_syn_parser.add_argument(
-        "--test-size",
-        type=float,
-        default=0.2,
-        help="Fraction of data for testing"
+        "--test-size", type=float, default=0.2, help="Fraction of data for testing"
     )
-    train_syn_parser.add_argument(
-        "--output",
-        type=str,
-        help="Output path for trained model"
-    )
+    train_syn_parser.add_argument("--output", type=str, help="Output path for trained model")
 
     # Train from database
     train_db_parser = subparsers.add_parser(
-        "train-database",
-        help="Train model on real database data"
+        "train-database", help="Train model on real database data"
     )
     train_db_parser.add_argument(
         "--model-type",
         choices=["random_forest", "gradient_boosting"],
         default="random_forest",
-        help="Type of model to train"
+        help="Type of model to train",
     )
     train_db_parser.add_argument(
-        "--test-size",
-        type=float,
-        default=0.2,
-        help="Fraction of data for testing"
+        "--test-size", type=float, default=0.2, help="Fraction of data for testing"
     )
-    train_db_parser.add_argument(
-        "--output",
-        type=str,
-        help="Output path for trained model"
-    )
+    train_db_parser.add_argument("--output", type=str, help="Output path for trained model")
 
     # Evaluate
-    eval_parser = subparsers.add_parser(
-        "evaluate",
-        help="Evaluate a trained model"
-    )
+    eval_parser = subparsers.add_parser("evaluate", help="Evaluate a trained model")
     eval_parser.add_argument(
         "--model-path",
         type=str,
         default="talon/models/threat_model_latest.pkl",
-        help="Path to trained model"
+        help="Path to trained model",
     )
 
     args = parser.parse_args()

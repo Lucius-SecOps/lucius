@@ -26,6 +26,7 @@ class TestGrantService:
             mock_get_db.return_value.__exit__ = MagicMock(return_value=None)
 
             from operations.services.grant_service import GrantService
+
             service = GrantService()
             return service
 

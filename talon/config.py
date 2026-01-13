@@ -10,8 +10,7 @@ class DatabaseConfig:
 
     url: str = field(
         default_factory=lambda: os.getenv(
-            "DATABASE_URL",
-            "postgresql://lucius:lucius_secret@localhost:5432/lucius_db"
+            "DATABASE_URL", "postgresql://lucius:lucius_secret@localhost:5432/lucius_db"
         )
     )
     pool_size: int = 10
@@ -23,9 +22,7 @@ class DatabaseConfig:
 class RedisConfig:
     """Redis configuration."""
 
-    url: str = field(
-        default_factory=lambda: os.getenv("REDIS_URL", "redis://localhost:6379/0")
-    )
+    url: str = field(default_factory=lambda: os.getenv("REDIS_URL", "redis://localhost:6379/0"))
     ttl: int = 3600
 
 
@@ -53,15 +50,9 @@ class CeleryConfig:
 class TwilioConfig:
     """Twilio SMS configuration."""
 
-    account_sid: str | None = field(
-        default_factory=lambda: os.getenv("TWILIO_ACCOUNT_SID")
-    )
-    auth_token: str | None = field(
-        default_factory=lambda: os.getenv("TWILIO_AUTH_TOKEN")
-    )
-    from_number: str | None = field(
-        default_factory=lambda: os.getenv("TWILIO_FROM_NUMBER")
-    )
+    account_sid: str | None = field(default_factory=lambda: os.getenv("TWILIO_ACCOUNT_SID"))
+    auth_token: str | None = field(default_factory=lambda: os.getenv("TWILIO_AUTH_TOKEN"))
+    from_number: str | None = field(default_factory=lambda: os.getenv("TWILIO_FROM_NUMBER"))
 
     @property
     def is_configured(self) -> bool:
@@ -72,9 +63,7 @@ class TwilioConfig:
 class SendGridConfig:
     """SendGrid email configuration."""
 
-    api_key: str | None = field(
-        default_factory=lambda: os.getenv("SENDGRID_API_KEY")
-    )
+    api_key: str | None = field(default_factory=lambda: os.getenv("SENDGRID_API_KEY"))
     from_email: str = field(
         default_factory=lambda: os.getenv("SENDGRID_FROM_EMAIL", "alerts@lucius.io")
     )
@@ -88,9 +77,7 @@ class SendGridConfig:
 class SlackConfig:
     """Slack notification configuration."""
 
-    webhook_url: str | None = field(
-        default_factory=lambda: os.getenv("SLACK_WEBHOOK_URL")
-    )
+    webhook_url: str | None = field(default_factory=lambda: os.getenv("SLACK_WEBHOOK_URL"))
 
     @property
     def is_configured(self) -> bool:
@@ -105,9 +92,7 @@ class Config:
     secret_key: str = field(
         default_factory=lambda: os.getenv("SECRET_KEY", "change-me-in-production")
     )
-    debug: bool = field(
-        default_factory=lambda: os.getenv("FLASK_ENV") == "development"
-    )
+    debug: bool = field(default_factory=lambda: os.getenv("FLASK_ENV") == "development")
 
     # Services
     database: DatabaseConfig = field(default_factory=DatabaseConfig)

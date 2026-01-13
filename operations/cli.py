@@ -62,7 +62,11 @@ def list_grants(ctx: click.Context, status: str | None, priority: str | None, up
         table.add_column("Days Left", justify="right")
 
         for grant in grants_list:
-            deadline_str = grant.submission_deadline.strftime("%Y-%m-%d") if grant.submission_deadline else "N/A"
+            deadline_str = (
+                grant.submission_deadline.strftime("%Y-%m-%d")
+                if grant.submission_deadline
+                else "N/A"
+            )
             days_left = grant.days_until_deadline
             days_str = str(days_left) if days_left is not None else "N/A"
 
@@ -94,10 +98,18 @@ def list_grants(ctx: click.Context, status: str | None, priority: str | None, up
 @click.option("--funder", "-f", required=True, help="Funder name")
 @click.option("--amount", "-a", type=float, help="Grant amount")
 @click.option("--deadline", "-d", help="Submission deadline (YYYY-MM-DD)")
-@click.option("--priority", "-p", type=click.Choice(["low", "medium", "high", "critical"]), default="medium")
+@click.option(
+    "--priority", "-p", type=click.Choice(["low", "medium", "high", "critical"]), default="medium"
+)
 @click.pass_context
-def create_grant(ctx: click.Context, name: str, funder: str, amount: float | None,
-                 deadline: str | None, priority: str):
+def create_grant(
+    ctx: click.Context,
+    name: str,
+    funder: str,
+    amount: float | None,
+    deadline: str | None,
+    priority: str,
+):
     """Create a new grant."""
     deadline_dt = None
     if deadline:
@@ -191,7 +203,9 @@ def data():
 @data.command("clean")
 @click.argument("input_file", type=click.Path(exists=True))
 @click.option("--output", "-o", type=click.Path(), help="Output file path")
-@click.option("--format", "-f", "output_format", type=click.Choice(["csv", "json", "excel"]), default="csv")
+@click.option(
+    "--format", "-f", "output_format", type=click.Choice(["csv", "json", "excel"]), default="csv"
+)
 @click.pass_context
 def clean_data(ctx: click.Context, input_file: str, output: str | None, output_format: str):
     """Clean nonprofit data from file."""
@@ -264,12 +278,12 @@ def validate_data(ctx: click.Context, input_file: str):
         console.print(f"  Invalid: [red]{result['invalid']}[/]")
         console.print(f"  Quality score: {result['quality_score']:.1f}%")
 
-        if result['issues']:
+        if result["issues"]:
             console.print("\n[yellow]Issues found:[/]")
-            for issue in result['issues'][:10]:
+            for issue in result["issues"][:10]:
                 console.print(f"  - {issue}")
 
-            if len(result['issues']) > 10:
+            if len(result["issues"]) > 10:
                 console.print(f"  ... and {len(result['issues']) - 10} more")
 
     except Exception as e:

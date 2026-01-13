@@ -45,7 +45,9 @@ class Grant(Base):
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relationships
-    milestones = relationship("GrantMilestone", back_populates="grant", cascade="all, delete-orphan")
+    milestones = relationship(
+        "GrantMilestone", back_populates="grant", cascade="all, delete-orphan"
+    )
 
     # Status values
     STATUSES = [
@@ -72,10 +74,16 @@ class Grant(Base):
             "currency": self.currency,
             "status": self.status,
             "priority": self.priority,
-            "submission_deadline": self.submission_deadline.isoformat() if self.submission_deadline else None,
+            "submission_deadline": (
+                self.submission_deadline.isoformat() if self.submission_deadline else None
+            ),
             "decision_date": self.decision_date.isoformat() if self.decision_date else None,
-            "project_start_date": self.project_start_date.isoformat() if self.project_start_date else None,
-            "project_end_date": self.project_end_date.isoformat() if self.project_end_date else None,
+            "project_start_date": (
+                self.project_start_date.isoformat() if self.project_start_date else None
+            ),
+            "project_end_date": (
+                self.project_end_date.isoformat() if self.project_end_date else None
+            ),
             "description": self.description,
             "requirements": self.requirements,
             "contacts": self.contacts,
@@ -188,6 +196,8 @@ class NonprofitData(Base):
             "revenue_amount": float(self.revenue_amount) if self.revenue_amount else None,
             "form_990_year": self.form_990_year,
             "is_verified": self.is_verified,
-            "data_quality_score": float(self.data_quality_score) if self.data_quality_score else None,
+            "data_quality_score": (
+                float(self.data_quality_score) if self.data_quality_score else None
+            ),
             "cleaned_at": self.cleaned_at.isoformat() if self.cleaned_at else None,
         }

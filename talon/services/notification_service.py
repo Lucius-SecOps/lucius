@@ -134,21 +134,25 @@ class SlackStrategy(NotificationStrategy):
         blocks = []
 
         if notification.subject:
-            blocks.append({
-                "type": "header",
-                "text": {
-                    "type": "plain_text",
-                    "text": notification.subject,
+            blocks.append(
+                {
+                    "type": "header",
+                    "text": {
+                        "type": "plain_text",
+                        "text": notification.subject,
+                    },
                 }
-            })
+            )
 
-        blocks.append({
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": notification.body,
+        blocks.append(
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": notification.body,
+                },
             }
-        })
+        )
 
         # Add metadata if present
         metadata = notification.metadata or {}
@@ -160,15 +164,17 @@ class SlackStrategy(NotificationStrategy):
                 "low": "🔵",
             }.get(metadata["severity"].lower(), "⚪")
 
-            blocks.append({
-                "type": "context",
-                "elements": [
-                    {
-                        "type": "mrkdwn",
-                        "text": f"{severity_emoji} Severity: *{metadata['severity'].upper()}*"
-                    }
-                ]
-            })
+            blocks.append(
+                {
+                    "type": "context",
+                    "elements": [
+                        {
+                            "type": "mrkdwn",
+                            "text": f"{severity_emoji} Severity: *{metadata['severity'].upper()}*",
+                        }
+                    ],
+                }
+            )
 
         return blocks
 

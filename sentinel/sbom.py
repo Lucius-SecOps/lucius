@@ -50,9 +50,7 @@ class SBOMGenerator:
             # Add ecosystem-specific info
             ecosystem = dep.get("ecosystem", "")
             if ecosystem:
-                component["properties"] = [
-                    {"name": "ecosystem", "value": ecosystem}
-                ]
+                component["properties"] = [{"name": "ecosystem", "value": ecosystem}]
 
             components.append(component)
 
@@ -69,23 +67,27 @@ class SBOMGenerator:
                 "description": vuln.get("description", ""),
                 "affects": [
                     {
-                        "ref": self._create_purl({
-                            "name": vuln.get("package_name", ""),
-                            "ecosystem": scan_result.get("package_manager", ""),
-                            "version": vuln.get("installed_version", ""),
-                        }),
+                        "ref": self._create_purl(
+                            {
+                                "name": vuln.get("package_name", ""),
+                                "ecosystem": scan_result.get("package_manager", ""),
+                                "version": vuln.get("installed_version", ""),
+                            }
+                        ),
                     }
                 ],
             }
 
             if vuln.get("cvss_score"):
-                vuln_entry["ratings"].append({
-                    "source": {"name": "NVD"},
-                    "score": vuln.get("cvss_score"),
-                    "severity": vuln.get("severity", "").lower(),
-                    "method": "CVSSv3",
-                    "vector": vuln.get("cvss_vector", ""),
-                })
+                vuln_entry["ratings"].append(
+                    {
+                        "source": {"name": "NVD"},
+                        "score": vuln.get("cvss_score"),
+                        "severity": vuln.get("severity", "").lower(),
+                        "method": "CVSSv3",
+                        "vector": vuln.get("cvss_vector", ""),
+                    }
+                )
 
             vulnerabilities.append(vuln_entry)
 
@@ -127,45 +129,53 @@ class SBOMGenerator:
         root_package_id = "SPDXRef-RootPackage"
 
         # Root package
-        packages.append({
-            "SPDXID": root_package_id,
-            "name": scan_result.get("project_name", "unknown"),
-            "versionInfo": "1.0.0",
-            "downloadLocation": "NOASSERTION",
-            "filesAnalyzed": False,
-        })
+        packages.append(
+            {
+                "SPDXID": root_package_id,
+                "name": scan_result.get("project_name", "unknown"),
+                "versionInfo": "1.0.0",
+                "downloadLocation": "NOASSERTION",
+                "filesAnalyzed": False,
+            }
+        )
 
         # Dependencies
         for i, dep in enumerate(scan_result.get("dependencies", [])):
             pkg_id = f"SPDXRef-Package-{i}"
 
-            packages.append({
-                "SPDXID": pkg_id,
-                "name": dep.get("name", ""),
-                "versionInfo": dep.get("version", ""),
-                "downloadLocation": "NOASSERTION",
-                "externalRefs": [
-                    {
-                        "referenceCategory": "PACKAGE-MANAGER",
-                        "referenceType": "purl",
-                        "referenceLocator": self._create_purl(dep),
-                    }
-                ],
-                "filesAnalyzed": False,
-            })
+            packages.append(
+                {
+                    "SPDXID": pkg_id,
+                    "name": dep.get("name", ""),
+                    "versionInfo": dep.get("version", ""),
+                    "downloadLocation": "NOASSERTION",
+                    "externalRefs": [
+                        {
+                            "referenceCategory": "PACKAGE-MANAGER",
+                            "referenceType": "purl",
+                            "referenceLocator": self._create_purl(dep),
+                        }
+                    ],
+                    "filesAnalyzed": False,
+                }
+            )
 
-            relationships.append({
-                "spdxElementId": root_package_id,
-                "relatedSpdxElement": pkg_id,
-                "relationshipType": "DEPENDS_ON",
-            })
+            relationships.append(
+                {
+                    "spdxElementId": root_package_id,
+                    "relatedSpdxElement": pkg_id,
+                    "relationshipType": "DEPENDS_ON",
+                }
+            )
 
         # Document relationship
-        relationships.append({
-            "spdxElementId": document_spdx_id,
-            "relatedSpdxElement": root_package_id,
-            "relationshipType": "DESCRIBES",
-        })
+        relationships.append(
+            {
+                "spdxElementId": document_spdx_id,
+                "relatedSpdxElement": root_package_id,
+                "relationshipType": "DESCRIBES",
+            }
+        )
 
         sbom = {
             "spdxVersion": "SPDX-2.3",

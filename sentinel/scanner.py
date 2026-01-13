@@ -45,7 +45,7 @@ class VulnerabilityScanner:
         async with NVDClient() as nvd_client:
             # Process dependencies in batches
             for i in range(0, len(dependencies), self.config.batch_size):
-                batch = dependencies[i:i + self.config.batch_size]
+                batch = dependencies[i : i + self.config.batch_size]
                 batch_results = await self._scan_batch(nvd_client, batch)
                 vulnerabilities.extend(batch_results)
 
@@ -127,17 +127,19 @@ class VulnerabilityScanner:
             for cve in cves:
                 # Check if the installed version is affected
                 if self._is_version_affected(dependency, cve):
-                    vulnerabilities.append({
-                        "cve_id": cve.get("cve_id"),
-                        "package_name": dependency.name,
-                        "installed_version": dependency.version,
-                        "severity": cve.get("severity", "UNKNOWN"),
-                        "cvss_score": cve.get("cvss_score"),
-                        "cvss_vector": cve.get("cvss_vector"),
-                        "description": cve.get("description", "")[:500],
-                        "fixed_version": self._get_fixed_version(cve),
-                        "references": cve.get("references", [])[:5],
-                    })
+                    vulnerabilities.append(
+                        {
+                            "cve_id": cve.get("cve_id"),
+                            "package_name": dependency.name,
+                            "installed_version": dependency.version,
+                            "severity": cve.get("severity", "UNKNOWN"),
+                            "cvss_score": cve.get("cvss_score"),
+                            "cvss_vector": cve.get("cvss_vector"),
+                            "description": cve.get("description", "")[:500],
+                            "fixed_version": self._get_fixed_version(cve),
+                            "references": cve.get("references", [])[:5],
+                        }
+                    )
 
             return vulnerabilities
 
@@ -167,6 +169,7 @@ class VulnerabilityScanner:
                 if version_end:
                     try:
                         from packaging import version as pkg_version
+
                         installed = pkg_version.parse(dependency.version)
                         fixed = pkg_version.parse(version_end)
                         return installed < fixed
@@ -196,13 +199,14 @@ class VulnerabilityScanner:
             return vulnerabilities
 
         threshold_index = self.SEVERITY_ORDER.index(threshold_upper)
-        allowed_severities = set(self.SEVERITY_ORDER[:threshold_index + 1])
+        allowed_severities = set(self.SEVERITY_ORDER[: threshold_index + 1])
 
         # Include LOW and above based on threshold
         allowed_severities = set(self.SEVERITY_ORDER[threshold_index:])
 
         return [
-            v for v in vulnerabilities
+            v
+            for v in vulnerabilities
             if v.get("severity", "UNKNOWN").upper() in allowed_severities
             or v.get("severity", "UNKNOWN").upper() not in self.SEVERITY_ORDER
         ]

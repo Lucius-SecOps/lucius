@@ -25,7 +25,9 @@ class NVDConfig:
 class TalonConfig:
     """Talon API configuration."""
 
-    api_url: str = field(default_factory=lambda: os.getenv("TALON_API_URL", "http://localhost:5000"))
+    api_url: str = field(
+        default_factory=lambda: os.getenv("TALON_API_URL", "http://localhost:5000")
+    )
     api_key: str | None = field(default_factory=lambda: os.getenv("TALON_API_KEY"))
     timeout: int = 30
     max_retries: int = 3

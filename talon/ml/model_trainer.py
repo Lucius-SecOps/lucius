@@ -34,14 +34,9 @@ class ThreatModelTrainer:
     - Model serialization
     """
 
-    def __init__(
-        self,
-        feature_extractor: VulnerabilityFeatureExtractor = None
-    ):
+    def __init__(self, feature_extractor: VulnerabilityFeatureExtractor = None):
         """Initialize trainer with feature extractor."""
-        self.feature_extractor = (
-            feature_extractor or VulnerabilityFeatureExtractor()
-        )
+        self.feature_extractor = feature_extractor or VulnerabilityFeatureExtractor()
 
     def train(
         self,
@@ -49,7 +44,7 @@ class ThreatModelTrainer:
         ground_truth_scores: list[float],
         model_type: str = "random_forest",
         test_size: float = 0.2,
-        **model_kwargs
+        **model_kwargs,
     ) -> ThreatModel:
         """
         Train a threat scoring model.
@@ -67,19 +62,14 @@ class ThreatModelTrainer:
         logger.info(f"Training {model_type} model on {len(vulnerabilities)} samples")
 
         # Extract features
-        features = self.feature_extractor.extract_features_batch(
-            vulnerabilities
-        )
+        features = self.feature_extractor.extract_features_batch(vulnerabilities)
         feature_names = self.feature_extractor.get_feature_names()
 
         logger.info(f"Extracted {features.shape[1]} features")
 
         # Split data
         X_train, X_test, y_train, y_test = train_test_split(
-            features,
-            ground_truth_scores,
-            test_size=test_size,
-            random_state=42
+            features, ground_truth_scores, test_size=test_size, random_state=42
         )
 
         # Scale features
@@ -103,13 +93,7 @@ class ThreatModelTrainer:
         r2 = r2_score(y_test, y_pred)
 
         # Cross-validation
-        cv_scores = cross_val_score(
-            model,
-            X_train_scaled,
-            y_train,
-            cv=5,
-            scoring="r2"
-        )
+        cv_scores = cross_val_score(model, X_train_scaled, y_train, cv=5, scoring="r2")
 
         metrics = {
             "train_r2": train_score,
@@ -139,7 +123,7 @@ class ThreatModelTrainer:
         self,
         model: ThreatModel,
         vulnerabilities: list[Vulnerability],
-        ground_truth_scores: list[float]
+        ground_truth_scores: list[float],
     ) -> dict[str, float]:
         """
         Evaluate a trained model on new data.
@@ -153,9 +137,7 @@ class ThreatModelTrainer:
             Dictionary of evaluation metrics
         """
         # Extract features
-        features = self.feature_extractor.extract_features_batch(
-            vulnerabilities
-        )
+        features = self.feature_extractor.extract_features_batch(vulnerabilities)
 
         # Predict
         predictions = model.predict(features)
@@ -173,8 +155,7 @@ class ThreatModelTrainer:
         }
 
     def generate_synthetic_training_data(
-        self,
-        n_samples: int = 1000
+        self, n_samples: int = 1000
     ) -> tuple[list[Vulnerability], list[float]]:
         """
         Generate synthetic CVE data for training.
@@ -200,9 +181,7 @@ class ThreatModelTrainer:
 
         return vulnerabilities, scores
 
-    def _generate_synthetic_vulnerability(
-        self
-    ) -> tuple[Vulnerability, float]:
+    def _generate_synthetic_vulnerability(self) -> tuple[Vulnerability, float]:
         """
         Generate a single synthetic vulnerability with ground truth score.
 
@@ -211,8 +190,7 @@ class ThreatModelTrainer:
         """
         # Randomly choose severity
         severity = random.choices(
-            ["CRITICAL", "HIGH", "MEDIUM", "LOW", "UNKNOWN"],
-            weights=[0.05, 0.15, 0.40, 0.35, 0.05]
+            ["CRITICAL", "HIGH", "MEDIUM", "LOW", "UNKNOWN"], weights=[0.05, 0.15, 0.40, 0.35, 0.05]
         )[0]
 
         # Generate CVSS score based on severity
@@ -230,45 +208,37 @@ class ThreatModelTrainer:
         cvss_vector = self._generate_cvss_vector(cvss_score)
 
         # Generate age (more recent = higher threat)
-        days_ago = int(random.expovariate(1/180))  # Exponential distribution
+        days_ago = int(random.expovariate(1 / 180))  # Exponential distribution
         published_date = datetime.utcnow() - timedelta(days=days_ago)
 
         # Generate affected packages
-        n_packages = random.choices(
-            [1, 2, 3, 5, 10],
-            weights=[0.5, 0.25, 0.15, 0.08, 0.02]
-        )[0]
+        n_packages = random.choices([1, 2, 3, 5, 10], weights=[0.5, 0.25, 0.15, 0.08, 0.02])[0]
 
         affected_packages = [
             {
-                "name": random.choice(list(
-                    self.feature_extractor.POPULAR_PACKAGES
-                )),
+                "name": random.choice(list(self.feature_extractor.POPULAR_PACKAGES)),
                 "version": f"{random.randint(1,5)}.{random.randint(0,20)}.{random.randint(0,10)}",
-                "ecosystem": random.choice(["npm", "pip", "maven", "composer"])
+                "ecosystem": random.choice(["npm", "pip", "maven", "composer"]),
             }
             for _ in range(n_packages)
         ]
 
         # Generate references
         n_refs = random.randint(1, 8)
-        references = [
-            {"url": f"https://example.com/ref{i}"}
-            for i in range(n_refs)
-        ]
+        references = [{"url": f"https://example.com/ref{i}"} for i in range(n_refs)]
 
         # Add NVD reference sometimes
         if random.random() < 0.7:
-            references.append({
-                "url": f"https://nvd.nist.gov/vuln/detail/CVE-2024-{random.randint(1000, 9999)}"
-            })
+            references.append(
+                {"url": f"https://nvd.nist.gov/vuln/detail/CVE-2024-{random.randint(1000, 9999)}"}
+            )
 
         # Add exploit reference sometimes
         has_exploit = random.random() < 0.3
         if has_exploit:
-            references.append({
-                "url": f"https://exploit-db.com/exploits/{random.randint(10000, 99999)}"
-            })
+            references.append(
+                {"url": f"https://exploit-db.com/exploits/{random.randint(10000, 99999)}"}
+            )
 
         # Create vulnerability object
         cve_id = f"CVE-{random.randint(2020, 2024)}-{random.randint(1000, 99999)}"

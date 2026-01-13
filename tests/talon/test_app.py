@@ -11,11 +11,13 @@ from talon.extensions import db
 def app():
     """Create test application."""
     app = create_app()
-    app.config.update({
-        "TESTING": True,
-        "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
-        "SQLALCHEMY_TRACK_MODIFICATIONS": False,
-    })
+    app.config.update(
+        {
+            "TESTING": True,
+            "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
+            "SQLALCHEMY_TRACK_MODIFICATIONS": False,
+        }
+    )
 
     with app.app_context():
         db.create_all()
@@ -65,12 +67,13 @@ class TestScansAPI:
 
     def test_create_scan(self, client):
         """Test creating a new scan."""
-        response = client.post("/api/v1/scans/", json={
-            "project_name": "test-project",
-            "dependencies": [
-                {"name": "lodash", "version": "4.17.21", "ecosystem": "npm"}
-            ]
-        })
+        response = client.post(
+            "/api/v1/scans/",
+            json={
+                "project_name": "test-project",
+                "dependencies": [{"name": "lodash", "version": "4.17.21", "ecosystem": "npm"}],
+            },
+        )
         assert response.status_code == 201
         data = response.get_json()
         assert "id" in data
@@ -79,10 +82,9 @@ class TestScansAPI:
     def test_get_scan(self, client):
         """Test getting a specific scan."""
         # Create scan first
-        create_response = client.post("/api/v1/scans/", json={
-            "project_name": "test",
-            "dependencies": []
-        })
+        create_response = client.post(
+            "/api/v1/scans/", json={"project_name": "test", "dependencies": []}
+        )
         scan_id = create_response.get_json()["id"]
 
         # Get scan
@@ -123,10 +125,13 @@ class TestNotificationsAPI:
 
     def test_create_notification(self, client):
         """Test creating a notification."""
-        response = client.post("/api/v1/notifications/", json={
-            "type": "email",
-            "recipient": "test@example.com",
-            "subject": "Test",
-            "message": "Test message"
-        })
+        response = client.post(
+            "/api/v1/notifications/",
+            json={
+                "type": "email",
+                "recipient": "test@example.com",
+                "subject": "Test",
+                "message": "Test message",
+            },
+        )
         assert response.status_code == 201

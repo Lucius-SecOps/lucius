@@ -91,7 +91,7 @@ class MLThreatScorer:
     def __init__(
         self,
         model_path: str | None = None,
-        feature_extractor: VulnerabilityFeatureExtractor | None = None
+        feature_extractor: VulnerabilityFeatureExtractor | None = None,
     ):
         """
         Initialize ML threat scorer.
@@ -100,9 +100,7 @@ class MLThreatScorer:
             model_path: Path to saved model file (.pkl)
             feature_extractor: Feature extractor instance
         """
-        self.feature_extractor = (
-            feature_extractor or VulnerabilityFeatureExtractor()
-        )
+        self.feature_extractor = feature_extractor or VulnerabilityFeatureExtractor()
         self.model: ThreatModel | None = None
 
         # Default model path
@@ -113,25 +111,14 @@ class MLThreatScorer:
         if os.path.exists(model_path):
             try:
                 self.model = self.load_model(model_path)
-                logger.info(
-                    f"Loaded ML threat model v{self.model.version} "
-                    f"from {model_path}"
-                )
+                logger.info(f"Loaded ML threat model v{self.model.version} " f"from {model_path}")
             except Exception as e:
-                logger.warning(
-                    f"Failed to load ML model: {e}. "
-                    "Using rule-based fallback."
-                )
+                logger.warning(f"Failed to load ML model: {e}. " "Using rule-based fallback.")
         else:
-            logger.info(
-                f"ML model not found at {model_path}. "
-                "Using rule-based fallback."
-            )
+            logger.info(f"ML model not found at {model_path}. " "Using rule-based fallback.")
 
     def calculate_threat_score(
-        self,
-        vulnerability: Vulnerability,
-        package_stats: dict | None = None
+        self, vulnerability: Vulnerability, package_stats: dict | None = None
     ) -> tuple[float, dict[str, float]]:
         """
         Calculate threat score for a vulnerability.
@@ -144,10 +131,7 @@ class MLThreatScorer:
             Tuple of (threat_score, feature_dict)
         """
         # Extract features
-        features = self.feature_extractor.extract_features(
-            vulnerability,
-            package_stats
-        )
+        features = self.feature_extractor.extract_features(vulnerability, package_stats)
 
         # Use ML model if available
         if self.model is not None:
@@ -162,9 +146,7 @@ class MLThreatScorer:
         return score, features
 
     def batch_calculate(
-        self,
-        vulnerabilities: list[Vulnerability],
-        package_stats: dict | None = None
+        self, vulnerabilities: list[Vulnerability], package_stats: dict | None = None
     ) -> list[tuple[str, float]]:
         """
         Calculate threat scores for multiple vulnerabilities.
@@ -190,9 +172,7 @@ class MLThreatScorer:
             raise ValueError("Model not loaded")
 
         # Convert features dict to array
-        feature_values = [
-            features[name] for name in self.model.feature_names
-        ]
+        feature_values = [features[name] for name in self.model.feature_names]
         feature_array = np.array([feature_values])
 
         # Predict
@@ -200,10 +180,7 @@ class MLThreatScorer:
 
         return round(float(scores[0]), 2)
 
-    def _calculate_rule_based_score(
-        self,
-        features: dict[str, float]
-    ) -> float:
+    def _calculate_rule_based_score(self, features: dict[str, float]) -> float:
         """
         Fallback rule-based scoring when ML model unavailable.
 
@@ -295,10 +272,7 @@ class MLThreatScorer:
         return str(models_dir / "threat_model_latest.pkl")
 
 
-def create_threat_model(
-    model_type: str = "random_forest",
-    **model_kwargs
-) -> any:
+def create_threat_model(model_type: str = "random_forest", **model_kwargs) -> any:
     """
     Create a scikit-learn model for threat scoring.
 

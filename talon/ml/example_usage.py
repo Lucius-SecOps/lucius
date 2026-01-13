@@ -41,9 +41,7 @@ def example_1_train_and_save():
 
     # Generate synthetic training data
     print("\n1. Generating 1000 synthetic training samples...")
-    vulnerabilities, scores = trainer.generate_synthetic_training_data(
-        n_samples=1000
-    )
+    vulnerabilities, scores = trainer.generate_synthetic_training_data(n_samples=1000)
     print(f"   ✓ Generated {len(vulnerabilities)} samples")
     print(f"   Score range: {min(scores):.2f} - {max(scores):.2f}")
 
@@ -62,11 +60,7 @@ def example_1_train_and_save():
     # Show feature importance
     print("\n3. Top 5 Most Important Features:")
     importance = model.get_feature_importance()
-    sorted_features = sorted(
-        importance.items(),
-        key=lambda x: x[1],
-        reverse=True
-    )
+    sorted_features = sorted(importance.items(), key=lambda x: x[1], reverse=True)
     for i, (feature, score) in enumerate(sorted_features[:5], 1):
         print(f"   {i}. {feature:30s}: {score:.4f}")
 
@@ -154,11 +148,7 @@ def example_2_load_and_score():
     print("\n   Key Features Contributing to Score:")
 
     # Show top contributing features
-    sorted_features = sorted(
-        features.items(),
-        key=lambda x: x[1],
-        reverse=True
-    )
+    sorted_features = sorted(features.items(), key=lambda x: x[1], reverse=True)
     for feature, value in sorted_features[:8]:
         bar = "█" * int(value * 30)
         print(f"   {feature:30s}: {bar} {value:.3f}")
@@ -188,7 +178,7 @@ def example_3_batch_scoring():
             severity=["CRITICAL", "HIGH", "MEDIUM", "LOW"][i % 4],
             cvss_score=3.0 + (i % 8),
             cvss_vector="CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
-            published_date=datetime.utcnow() - timedelta(days=i*5),
+            published_date=datetime.utcnow() - timedelta(days=i * 5),
         )
         test_vulns.append(vuln)
     print(f"   ✓ Generated {len(test_vulns)} vulnerabilities")
@@ -229,11 +219,7 @@ def example_4_feature_importance():
     print(f"\n   {'Feature':<35} {'Importance':<12} {'Visual'}")
     print("   " + "-" * 70)
 
-    sorted_features = sorted(
-        importance.items(),
-        key=lambda x: x[1],
-        reverse=True
-    )
+    sorted_features = sorted(importance.items(), key=lambda x: x[1], reverse=True)
 
     for feature, score in sorted_features:
         bar = "█" * int(score * 40)
@@ -279,6 +265,7 @@ def main():
     except Exception as e:
         print(f"\n✗ Error running examples: {e}")
         import traceback
+
         traceback.print_exc()
 
 
