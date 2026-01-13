@@ -3,7 +3,6 @@
 import logging
 import os
 import sys
-from typing import Any
 
 import structlog
 
@@ -16,14 +15,14 @@ def setup_logging(level: str = None) -> None:
         level: Log level (DEBUG, INFO, WARNING, ERROR)
     """
     log_level = level or os.getenv("LOG_LEVEL", "INFO")
-    
+
     # Configure standard logging
     logging.basicConfig(
         format="%(message)s",
         stream=sys.stdout,
         level=getattr(logging, log_level.upper()),
     )
-    
+
     # Configure structlog
     structlog.configure(
         processors=[

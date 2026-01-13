@@ -11,6 +11,7 @@ Demonstrates:
 from datetime import datetime, timedelta
 from uuid import uuid4
 
+
 # Mock Vulnerability for demonstration
 class MockVulnerability:
     def __init__(self, **kwargs):
@@ -150,7 +151,7 @@ def example_2_load_and_score():
     print("\n4. Detailed Feature Analysis (CVE-2024-1111):")
     score, features = scorer.calculate_threat_score(test_vulns[0])
     print(f"   Final Threat Score: {score:.2f}/100")
-    print(f"\n   Key Features Contributing to Score:")
+    print("\n   Key Features Contributing to Score:")
 
     # Show top contributing features
     sorted_features = sorted(
@@ -255,7 +256,7 @@ def main():
 
     try:
         # Example 1: Train and save
-        model_path = example_1_train_and_save()
+        example_1_train_and_save()
 
         # Example 2: Load and score
         example_2_load_and_score()

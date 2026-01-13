@@ -11,19 +11,18 @@ These ABCs ensure consistent behavior across implementations:
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Generic, TypeVar, Optional
+from typing import Any, Generic, TypeVar
 from uuid import UUID
 
 from .types import (
-    Vulnerability,
-    ScanResult,
+    Dependency,
     Grant,
     Milestone,
     Notification,
-    Dependency,
-    NonprofitOrganization,
-    Severity,
     NotificationChannel,
+    ScanResult,
+    Severity,
+    Vulnerability,
 )
 
 T = TypeVar("T")
@@ -126,7 +125,7 @@ class VulnerabilityDatabaseInterface(ABC):
         self,
         package_name: str,
         ecosystem: str,
-        version: Optional[str] = None,
+        version: str | None = None,
     ) -> list[Vulnerability]:
         """
         Search vulnerabilities by package.
@@ -142,7 +141,7 @@ class VulnerabilityDatabaseInterface(ABC):
         pass
 
     @abstractmethod
-    def get_by_cve(self, cve_id: str) -> Optional[Vulnerability]:
+    def get_by_cve(self, cve_id: str) -> Vulnerability | None:
         """
         Get vulnerability by CVE ID.
 
@@ -348,7 +347,7 @@ class RepositoryInterface(ABC, Generic[T, ID]):
     """Abstract base class for data repositories."""
 
     @abstractmethod
-    def get_by_id(self, id: ID) -> Optional[T]:
+    def get_by_id(self, id: ID) -> T | None:
         """
         Get entity by ID.
 

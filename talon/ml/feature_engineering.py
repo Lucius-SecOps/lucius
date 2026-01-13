@@ -4,13 +4,13 @@ Feature engineering for vulnerability threat scoring.
 Extracts and transforms raw vulnerability data into ML-ready features.
 """
 
-from datetime import datetime
-from typing import Dict, List, Optional
 import re
+from datetime import UTC, datetime
 
 import numpy as np
-from talon.models import Vulnerability
+
 from shared.logging import get_logger
+from talon.models import Vulnerability
 
 logger = get_logger(__name__)
 
@@ -60,8 +60,8 @@ class VulnerabilityFeatureExtractor:
     def extract_features(
         self,
         vulnerability: Vulnerability,
-        package_stats: Optional[Dict] = None
-    ) -> Dict[str, float]:
+        package_stats: dict | None = None
+    ) -> dict[str, float]:
         """
         Extract all features from a vulnerability.
 
@@ -127,8 +127,8 @@ class VulnerabilityFeatureExtractor:
 
     def extract_features_batch(
         self,
-        vulnerabilities: List[Vulnerability],
-        package_stats: Optional[Dict] = None
+        vulnerabilities: list[Vulnerability],
+        package_stats: dict | None = None
     ) -> np.ndarray:
         """
         Extract features for multiple vulnerabilities.
@@ -144,7 +144,7 @@ class VulnerabilityFeatureExtractor:
 
         return np.array(features_list)
 
-    def get_feature_names(self) -> List[str]:
+    def get_feature_names(self) -> list[str]:
         """Get ordered list of feature names."""
         return [
             "cvss_score",
@@ -213,7 +213,7 @@ class VulnerabilityFeatureExtractor:
     def _extract_package_popularity(
         self,
         vuln: Vulnerability,
-        package_stats: Optional[Dict]
+        package_stats: dict | None
     ) -> float:
         """
         Extract package popularity score.
@@ -297,8 +297,7 @@ class VulnerabilityFeatureExtractor:
 
         now = datetime.utcnow()
         if vuln.published_date.tzinfo:
-            from datetime import timezone
-            now = now.replace(tzinfo=timezone.utc)
+            now = now.replace(tzinfo=UTC)
 
         age_days = (now - vuln.published_date).days
 

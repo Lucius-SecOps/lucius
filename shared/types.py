@@ -15,7 +15,6 @@ All IDs use UUIDv4.
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional, Dict
 from uuid import UUID, uuid4
 
 
@@ -79,9 +78,9 @@ class Dependency:
     ecosystem: str  # npm, pip, composer
     is_dev: bool = False
     is_direct: bool = True
-    source: Optional[str] = None
+    source: str | None = None
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return {
             "name": self.name,
             "version": self.version,
@@ -96,7 +95,7 @@ class Dependency:
 class VulnerabilityReference:
     """Reference link for a vulnerability."""
     url: str
-    source: Optional[str] = None
+    source: str | None = None
 
 
 @dataclass
@@ -105,15 +104,15 @@ class Vulnerability:
     cve_id: str
     severity: Severity
     description: str = ""
-    cvss_score: Optional[float] = None
-    cvss_vector: Optional[str] = None
-    affected_packages: List[Dict] = field(default_factory=list)
-    references: List[VulnerabilityReference] = field(default_factory=list)
-    published_date: Optional[datetime] = None
-    modified_date: Optional[datetime] = None
-    threat_score: Optional[float] = None
+    cvss_score: float | None = None
+    cvss_vector: str | None = None
+    affected_packages: list[dict] = field(default_factory=list)
+    references: list[VulnerabilityReference] = field(default_factory=list)
+    published_date: datetime | None = None
+    modified_date: datetime | None = None
+    threat_score: float | None = None
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return {
             "cve_id": self.cve_id,
             "severity": self.severity.value,
@@ -135,11 +134,11 @@ class ScanVulnerability:
     package_name: str
     installed_version: str
     severity: Severity
-    cvss_score: Optional[float] = None
-    description: Optional[str] = None
-    fixed_version: Optional[str] = None
+    cvss_score: float | None = None
+    description: str | None = None
+    fixed_version: str | None = None
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return {
             "cve_id": self.cve_id,
             "package_name": self.package_name,
@@ -165,12 +164,12 @@ class ScanResult:
     high_count: int = 0
     medium_count: int = 0
     low_count: int = 0
-    vulnerabilities: List[ScanVulnerability] = field(default_factory=list)
-    scan_metadata: Dict = field(default_factory=dict)
+    vulnerabilities: list[ScanVulnerability] = field(default_factory=list)
+    scan_metadata: dict = field(default_factory=dict)
     created_at: datetime = field(default_factory=datetime.utcnow)
-    completed_at: Optional[datetime] = None
+    completed_at: datetime | None = None
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return {
             "id": str(self.id),
             "project_name": self.project_name,
@@ -196,19 +195,19 @@ class Grant:
     id: UUID = field(default_factory=uuid4)
     grant_name: str = ""
     funder: str = ""
-    amount: Optional[float] = None
+    amount: float | None = None
     currency: str = "USD"
     status: GrantStatus = GrantStatus.PROSPECTING
     priority: Priority = Priority.MEDIUM
-    submission_deadline: Optional[datetime] = None
-    decision_date: Optional[datetime] = None
-    description: Optional[str] = None
-    requirements: Dict = field(default_factory=dict)
-    contacts: List[Dict] = field(default_factory=list)
-    notes: Optional[str] = None
+    submission_deadline: datetime | None = None
+    decision_date: datetime | None = None
+    description: str | None = None
+    requirements: dict = field(default_factory=dict)
+    contacts: list[dict] = field(default_factory=list)
+    notes: str | None = None
     created_at: datetime = field(default_factory=datetime.utcnow)
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return {
             "id": str(self.id),
             "grant_name": self.grant_name,
@@ -227,7 +226,7 @@ class Grant:
         }
 
     @property
-    def days_until_deadline(self) -> Optional[int]:
+    def days_until_deadline(self) -> int | None:
         """Calculate days until submission deadline."""
         if not self.submission_deadline:
             return None
@@ -241,13 +240,13 @@ class Milestone:
     id: UUID = field(default_factory=uuid4)
     grant_id: UUID = field(default_factory=uuid4)
     milestone_name: str = ""
-    description: Optional[str] = None
-    due_date: Optional[datetime] = None
+    description: str | None = None
+    due_date: datetime | None = None
     status: str = "pending"
     reminder_sent: bool = False
-    completed_at: Optional[datetime] = None
+    completed_at: datetime | None = None
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return {
             "id": str(self.id),
             "grant_id": str(self.grant_id),
@@ -267,16 +266,16 @@ class Notification:
     notification_type: str = "alert"
     channel: NotificationChannel = NotificationChannel.SLACK
     recipient: str = ""
-    subject: Optional[str] = None
+    subject: str | None = None
     body: str = ""
-    metadata: Dict = field(default_factory=dict)
+    metadata: dict = field(default_factory=dict)
     status: NotificationStatus = NotificationStatus.PENDING
-    sent_at: Optional[datetime] = None
-    error_message: Optional[str] = None
+    sent_at: datetime | None = None
+    error_message: str | None = None
     retry_count: int = 0
     created_at: datetime = field(default_factory=datetime.utcnow)
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return {
             "id": str(self.id),
             "notification_type": self.notification_type,
@@ -297,21 +296,21 @@ class Notification:
 class NonprofitOrganization:
     """Nonprofit organization data record."""
     id: UUID = field(default_factory=uuid4)
-    ein: Optional[str] = None
+    ein: str | None = None
     organization_name: str = ""
-    dba_name: Optional[str] = None
-    address: Dict = field(default_factory=dict)
-    phone: Optional[str] = None
-    email: Optional[str] = None
-    website: Optional[str] = None
-    mission_statement: Optional[str] = None
-    ntee_code: Optional[str] = None
-    asset_amount: Optional[float] = None
-    income_amount: Optional[float] = None
+    dba_name: str | None = None
+    address: dict = field(default_factory=dict)
+    phone: str | None = None
+    email: str | None = None
+    website: str | None = None
+    mission_statement: str | None = None
+    ntee_code: str | None = None
+    asset_amount: float | None = None
+    income_amount: float | None = None
     is_verified: bool = False
-    data_quality_score: Optional[float] = None
+    data_quality_score: float | None = None
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return {
             "id": str(self.id),
             "ein": self.ein,
@@ -334,12 +333,12 @@ class NonprofitOrganization:
 class APIResponse:
     """Standard API response wrapper."""
     success: bool = True
-    data: Optional[Dict] = None
-    error: Optional[str] = None
-    message: Optional[str] = None
-    metadata: Dict = field(default_factory=dict)
+    data: dict | None = None
+    error: str | None = None
+    message: str | None = None
+    metadata: dict = field(default_factory=dict)
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return {
             "success": self.success,
             "data": self.data,
@@ -352,14 +351,14 @@ class APIResponse:
 @dataclass
 class PaginatedResponse:
     """Paginated API response."""
-    items: List[Dict] = field(default_factory=list)
+    items: list[dict] = field(default_factory=list)
     total: int = 0
     page: int = 1
     page_size: int = 50
     has_next: bool = False
     has_prev: bool = False
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return {
             "items": self.items,
             "total": self.total,

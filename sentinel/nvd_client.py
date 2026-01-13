@@ -2,7 +2,7 @@
 
 import asyncio
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 import httpx
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -18,7 +18,7 @@ class NVDClient:
 
     def __init__(self) -> None:
         self.config = config.nvd
-        self._client: Optional[httpx.AsyncClient] = None
+        self._client: httpx.AsyncClient | None = None
         self._last_request_time: float = 0
 
     async def __aenter__(self) -> "NVDClient":
@@ -57,7 +57,7 @@ class NVDClient:
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=2, max=10),
     )
-    async def get_cve(self, cve_id: str) -> Optional[dict[str, Any]]:
+    async def get_cve(self, cve_id: str) -> dict[str, Any] | None:
         """
         Get details for a specific CVE.
 
@@ -68,23 +68,23 @@ class NVDClient:
             CVE details or None if not found
         """
         await self._rate_limit()
-        
+
         url = f"{self.config.base_url}"
         params = {"cveId": cve_id}
-        
+
         logger.debug(f"Fetching CVE: {cve_id}")
-        
+
         try:
             response = await self._client.get(url, params=params)
             response.raise_for_status()
-            
+
             data = response.json()
             vulnerabilities = data.get("vulnerabilities", [])
-            
+
             if vulnerabilities:
                 return self._parse_cve(vulnerabilities[0].get("cve", {}))
             return None
-            
+
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 404:
                 return None
@@ -96,11 +96,11 @@ class NVDClient:
 
     async def search_cves(
         self,
-        keyword: Optional[str] = None,
-        cpe_name: Optional[str] = None,
-        cvss_v3_severity: Optional[str] = None,
-        pub_start_date: Optional[datetime] = None,
-        pub_end_date: Optional[datetime] = None,
+        keyword: str | None = None,
+        cpe_name: str | None = None,
+        cvss_v3_severity: str | None = None,
+        pub_start_date: datetime | None = None,
+        pub_end_date: datetime | None = None,
         results_per_page: int = 100,
         start_index: int = 0,
     ) -> dict[str, Any]:
@@ -120,12 +120,12 @@ class NVDClient:
             Search results with CVE list and metadata
         """
         await self._rate_limit()
-        
-        params = {
+
+        params: dict[str, str | int] = {
             "resultsPerPage": min(results_per_page, 2000),
             "startIndex": start_index,
         }
-        
+
         if keyword:
             params["keywordSearch"] = keyword
         if cpe_name:
@@ -136,25 +136,24 @@ class NVDClient:
             params["pubStartDate"] = pub_start_date.strftime("%Y-%m-%dT%H:%M:%S.000")
         if pub_end_date:
             params["pubEndDate"] = pub_end_date.strftime("%Y-%m-%dT%H:%M:%S.000")
-        
+
         logger.debug(f"Searching CVEs with params: {params}")
-        
+
         try:
             response = await self._client.get(self.config.base_url, params=params)
             response.raise_for_status()
-            
+
             data = response.json()
-            
+
             return {
                 "total_results": data.get("totalResults", 0),
                 "results_per_page": data.get("resultsPerPage", 0),
                 "start_index": data.get("startIndex", 0),
                 "vulnerabilities": [
-                    self._parse_cve(v.get("cve", {}))
-                    for v in data.get("vulnerabilities", [])
+                    self._parse_cve(v.get("cve", {})) for v in data.get("vulnerabilities", [])
                 ],
             }
-            
+
         except Exception as e:
             logger.error(f"Error searching CVEs: {e}")
             raise
@@ -163,7 +162,7 @@ class NVDClient:
         self,
         package_name: str,
         ecosystem: str = "npm",
-        version: Optional[str] = None,
+        version: str | None = None,
     ) -> list[dict[str, Any]]:
         """
         Get CVEs affecting a specific package.
@@ -176,42 +175,34 @@ class NVDClient:
         Returns:
             List of CVEs affecting the package
         """
-        # Map ecosystem to CPE vendor/product patterns
-        cpe_patterns = {
-            "npm": f"cpe:2.3:a:*:{package_name}:*:*:*:*:*:node.js:*:*",
-            "pip": f"cpe:2.3:a:*:{package_name}:*:*:*:*:*:python:*:*",
-            "composer": f"cpe:2.3:a:*:{package_name}:*:*:*:*:*:php:*:*",
-        }
-        
         # Use keyword search as fallback (CPE matching is complex)
         results = await self.search_cves(keyword=package_name)
-        
+
         cves = []
         for cve in results.get("vulnerabilities", []):
             # Check if package is mentioned in affected configurations
             if self._package_affected(cve, package_name, version):
                 cves.append(cve)
-        
+
         return cves
 
     def _parse_cve(self, cve_data: dict[str, Any]) -> dict[str, Any]:
         """Parse CVE data into a standardized format."""
         cve_id = cve_data.get("id", "")
-        
+
         # Get description
         descriptions = cve_data.get("descriptions", [])
         description = next(
             (d.get("value", "") for d in descriptions if d.get("lang") == "en"),
             descriptions[0].get("value", "") if descriptions else "",
         )
-        
+
         # Get CVSS metrics
         metrics = cve_data.get("metrics", {})
-        cvss_v3 = None
         cvss_score = None
         cvss_vector = None
         severity = "UNKNOWN"
-        
+
         # Try CVSS 3.1 first, then 3.0
         for metric_key in ["cvssMetricV31", "cvssMetricV30"]:
             if metric_key in metrics:
@@ -220,16 +211,16 @@ class NVDClient:
                 cvss_vector = cvss_data.get("vectorString")
                 severity = cvss_data.get("baseSeverity", "UNKNOWN")
                 break
-        
+
         # Get references
         references = [
             {"url": ref.get("url"), "source": ref.get("source")}
             for ref in cve_data.get("references", [])
         ]
-        
+
         # Get affected configurations
         affected_packages = self._extract_affected_packages(cve_data)
-        
+
         return {
             "cve_id": cve_id,
             "description": description,
@@ -245,10 +236,10 @@ class NVDClient:
     def _extract_affected_packages(self, cve_data: dict[str, Any]) -> list[dict[str, Any]]:
         """Extract affected packages from CVE configurations."""
         packages = []
-        
+
         configurations = cve_data.get("configurations", [])
-        for config in configurations:
-            nodes = config.get("nodes", [])
+        for cfg in configurations:
+            nodes = cfg.get("nodes", [])
             for node in nodes:
                 cpe_matches = node.get("cpeMatch", [])
                 for match in cpe_matches:
@@ -256,24 +247,26 @@ class NVDClient:
                         cpe = match.get("criteria", "")
                         parts = cpe.split(":")
                         if len(parts) >= 5:
-                            packages.append({
-                                "vendor": parts[3],
-                                "product": parts[4],
-                                "version_start": match.get("versionStartIncluding"),
-                                "version_end": match.get("versionEndExcluding"),
-                            })
-        
+                            packages.append(
+                                {
+                                    "vendor": parts[3],
+                                    "product": parts[4],
+                                    "version_start": match.get("versionStartIncluding"),
+                                    "version_end": match.get("versionEndExcluding"),
+                                }
+                            )
+
         return packages
 
     def _package_affected(
         self,
         cve: dict[str, Any],
         package_name: str,
-        version: Optional[str],
+        version: str | None,
     ) -> bool:
         """Check if a package/version is affected by a CVE."""
         package_lower = package_name.lower()
-        
+
         # Check affected packages
         for pkg in cve.get("affected_packages", []):
             if package_lower in pkg.get("product", "").lower():
@@ -281,7 +274,7 @@ class NVDClient:
                     # Simple version comparison (should use packaging.version)
                     return True
                 return True
-        
+
         # Check if package is mentioned in description
         description = cve.get("description", "").lower()
         return package_lower in description

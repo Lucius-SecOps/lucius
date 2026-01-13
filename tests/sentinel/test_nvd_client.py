@@ -1,7 +1,9 @@
 """Tests for Sentinel NVD client."""
 
+from unittest.mock import MagicMock, patch
+
+import httpx
 import pytest
-from unittest.mock import patch, MagicMock
 
 from sentinel.nvd_client import NVDClient
 
@@ -82,16 +84,12 @@ class TestNVDClient:
         mock_response.headers = {"Retry-After": "1"}
         mock_get.return_value = mock_response
 
-        with pytest.raises(Exception):
+        with pytest.raises(httpx.HTTPStatusError):
             client.search_by_keyword("test")
 
     def test_build_cpe(self, client):
         """Test CPE string building."""
-        cpe = client.build_cpe(
-            vendor="lodash",
-            product="lodash",
-            version="4.17.0"
-        )
+        cpe = client.build_cpe(vendor="lodash", product="lodash", version="4.17.0")
         assert cpe.startswith("cpe:2.3:a:")
         assert "lodash" in cpe
         assert "4.17.0" in cpe
@@ -100,6 +98,6 @@ class TestNVDClient:
         """Test parsing CVSS severity."""
         vuln = sample_vulnerability["vulnerabilities"][0]["cve"]
         severity = client.parse_severity(vuln)
-        
+
         assert severity["score"] == 7.5
         assert severity["severity"] == "HIGH"

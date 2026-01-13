@@ -1,8 +1,7 @@
 """Deadline monitoring service with Twilio SMS integration."""
 
 import time
-from datetime import datetime, timedelta
-from typing import Optional
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.orm import Session
 
@@ -34,16 +33,16 @@ class SMSNotifier:
             from twilio.rest import Client
 
             client = Client(self.config.account_sid, self.config.auth_token)
-            
+
             result = client.messages.create(
                 body=message,
                 from_=self.config.from_number,
                 to=to,
             )
-            
+
             logger.info(f"SMS sent: {result.sid}")
             return True
-            
+
         except Exception as e:
             logger.error(f"SMS send failed: {e}")
             return False
@@ -68,21 +67,21 @@ class DeadlineMonitor:
         """
         now = datetime.utcnow()
         end_date = now + timedelta(days=days)
-        
+
         grants = self.grant_repo.get_by_deadline_range(now, end_date)
-        
+
         result = []
         for grant in grants:
             days_left = grant.days_until_deadline
             if days_left is not None and days_left >= 0:
                 result.append((grant, days_left))
-        
+
         return sorted(result, key=lambda x: x[1])
 
     def get_overdue_grants(self) -> list[Grant]:
         """Get grants with passed deadlines that aren't closed."""
         now = datetime.utcnow()
-        
+
         return self.session.query(Grant).filter(
             Grant.submission_deadline < now,
             Grant.status.notin_(["submitted", "under_review", "awarded", "rejected", "closed"]),
@@ -92,18 +91,17 @@ class DeadlineMonitor:
         """Get upcoming milestones."""
         now = datetime.utcnow()
         milestones = self.milestone_repo.get_upcoming(days=days)
-        
+
         result = []
         for milestone in milestones:
             if milestone.due_date.tzinfo:
-                from datetime import timezone
-                now_aware = now.replace(tzinfo=timezone.utc)
+                now_aware = now.replace(tzinfo=UTC)
             else:
                 now_aware = now
-            
+
             days_left = (milestone.due_date - now_aware).days
             result.append((milestone, days_left))
-        
+
         return sorted(result, key=lambda x: x[1])
 
     def should_send_reminder(self, days_until: int) -> bool:
@@ -112,7 +110,7 @@ class DeadlineMonitor:
 
     def send_deadline_reminders(
         self,
-        phone_numbers: Optional[list[str]] = None,
+        phone_numbers: list[str] | None = None,
     ) -> int:
         """
         Send SMS reminders for upcoming deadlines.
@@ -129,45 +127,45 @@ class DeadlineMonitor:
 
         # Get deadlines that need reminders
         upcoming = self.get_upcoming_deadlines(days=max(self.reminder_days))
-        
+
         sent_count = 0
         for grant, days_left in upcoming:
             if not self.should_send_reminder(days_left):
                 continue
-            
+
             message = self._format_deadline_message(grant, days_left)
-            
+
             for phone in phone_numbers:
                 if self.sms_notifier.send_sms(phone, message):
                     sent_count += 1
-        
+
         logger.info(f"Sent {sent_count} deadline reminders")
         return sent_count
 
     def send_milestone_reminders(
         self,
-        phone_numbers: Optional[list[str]] = None,
+        phone_numbers: list[str] | None = None,
     ) -> int:
         """Send SMS reminders for upcoming milestones."""
         if not phone_numbers:
             return 0
 
         upcoming = self.get_upcoming_milestones(days=max(self.reminder_days))
-        
+
         sent_count = 0
         for milestone, days_left in upcoming:
             if not self.should_send_reminder(days_left) or milestone.reminder_sent:
                 continue
-            
+
             message = self._format_milestone_message(milestone, days_left)
-            
+
             for phone in phone_numbers:
                 if self.sms_notifier.send_sms(phone, message):
                     sent_count += 1
-            
+
             # Mark reminder as sent
             milestone.reminder_sent = True
-        
+
         self.session.flush()
         logger.info(f"Sent {sent_count} milestone reminders")
         return sent_count
@@ -176,7 +174,7 @@ class DeadlineMonitor:
         """Format deadline reminder message."""
         urgency = "⚠️ URGENT: " if days_left <= 3 else ""
         day_word = "day" if days_left == 1 else "days"
-        
+
         return (
             f"{urgency}Grant Deadline Reminder\n\n"
             f"'{grant.grant_name}' ({grant.funder})\n"
@@ -188,7 +186,7 @@ class DeadlineMonitor:
         """Format milestone reminder message."""
         day_word = "day" if days_left == 1 else "days"
         grant = milestone.grant
-        
+
         return (
             f"Milestone Reminder\n\n"
             f"'{milestone.milestone_name}'\n"
@@ -204,24 +202,24 @@ class DeadlineMonitor:
             interval: Check interval in seconds
         """
         logger.info(f"Starting deadline monitor (interval: {interval}s)")
-        
+
         while True:
             try:
                 self._run_check()
             except Exception as e:
                 logger.error(f"Error during deadline check: {e}")
-            
+
             time.sleep(interval)
 
     def _run_check(self) -> None:
         """Run a single deadline check."""
         logger.debug("Running deadline check")
-        
+
         # Check for upcoming deadlines
         upcoming = self.get_upcoming_deadlines(days=7)
         if upcoming:
             logger.info(f"Found {len(upcoming)} upcoming deadlines")
-        
+
         # Check for overdue grants
         overdue = self.get_overdue_grants()
         if overdue:
@@ -238,7 +236,7 @@ class DeadlineMonitor:
         """
         deadline_alerts = self.send_deadline_reminders(phone_numbers)
         milestone_alerts = self.send_milestone_reminders(phone_numbers)
-        
+
         return {
             "deadline_reminders": deadline_alerts,
             "milestone_reminders": milestone_alerts,

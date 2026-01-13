@@ -2,14 +2,13 @@
 
 import os
 from dataclasses import dataclass, field
-from typing import Optional
 
 
 @dataclass
 class NVDConfig:
     """NVD API configuration."""
 
-    api_key: Optional[str] = field(default_factory=lambda: os.getenv("NVD_API_KEY"))
+    api_key: str | None = field(default_factory=lambda: os.getenv("NVD_API_KEY"))
     base_url: str = "https://services.nvd.nist.gov/rest/json/cves/2.0"
     rate_limit: float = 0.6  # seconds between requests (without API key)
     rate_limit_with_key: float = 0.1  # seconds between requests (with API key)
@@ -27,7 +26,7 @@ class TalonConfig:
     """Talon API configuration."""
 
     api_url: str = field(default_factory=lambda: os.getenv("TALON_API_URL", "http://localhost:5000"))
-    api_key: Optional[str] = field(default_factory=lambda: os.getenv("TALON_API_KEY"))
+    api_key: str | None = field(default_factory=lambda: os.getenv("TALON_API_KEY"))
     timeout: int = 30
     max_retries: int = 3
 

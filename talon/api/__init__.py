@@ -3,9 +3,9 @@
 from flask import Blueprint
 from flask_restx import Api
 
+from talon.api.notifications import notifications_ns
 from talon.api.scans import scans_ns
 from talon.api.vulnerabilities import vulnerabilities_ns
-from talon.api.notifications import notifications_ns
 
 # Create blueprint
 api_blueprint = Blueprint("api", __name__)

@@ -1,11 +1,11 @@
 """Scan service for processing vulnerability scan results."""
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
+from shared.logging import get_logger
 from talon.extensions import db
 from talon.models import ScanResult, ScanVulnerability, Vulnerability
-from shared.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -39,26 +39,26 @@ class ScanService:
             status="completed",
             completed_at=datetime.utcnow(),
         )
-        
+
         db.session.add(scan)
         db.session.flush()  # Get scan ID
-        
+
         # Process vulnerabilities
         vulnerabilities = data.get("vulnerabilities", [])
         for vuln_data in vulnerabilities:
             self._process_vulnerability(scan, vuln_data)
-        
+
         db.session.commit()
-        
+
         logger.info(
             f"Created scan {scan.id} for {scan.project_name} "
             f"with {len(vulnerabilities)} vulnerabilities"
         )
-        
+
         # Trigger notifications if critical vulnerabilities found
         if scan.critical_count > 0:
             self._trigger_critical_alert(scan)
-        
+
         return scan
 
     def _process_vulnerability(
@@ -70,10 +70,10 @@ class ScanService:
         cve_id = vuln_data.get("cve_id")
         if not cve_id:
             return
-        
+
         # Find or create vulnerability record
         vulnerability = Vulnerability.query.filter_by(cve_id=cve_id).first()
-        
+
         if not vulnerability:
             vulnerability = Vulnerability(
                 cve_id=cve_id,
@@ -86,7 +86,7 @@ class ScanService:
             )
             db.session.add(vulnerability)
             db.session.flush()
-        
+
         # Create scan-vulnerability link
         scan_vuln = ScanVulnerability(
             scan_id=scan.id,
@@ -100,7 +100,7 @@ class ScanService:
     def _trigger_critical_alert(self, scan: ScanResult) -> None:
         """Trigger alert for critical vulnerabilities."""
         from talon.tasks.notifications import send_critical_alert
-        
+
         try:
             send_critical_alert.delay(
                 project_name=scan.project_name,
@@ -110,7 +110,7 @@ class ScanService:
         except Exception as e:
             logger.error(f"Failed to trigger critical alert: {e}")
 
-    def get_scan(self, scan_id: str) -> Optional[ScanResult]:
+    def get_scan(self, scan_id: str) -> ScanResult | None:
         """Get a scan by ID."""
         return ScanResult.query.get(scan_id)
 
@@ -128,8 +128,8 @@ class ScanService:
 
     def get_vulnerable_packages(
         self,
-        project_name: Optional[str] = None,
-        severity: Optional[str] = None,
+        project_name: str | None = None,
+        severity: str | None = None,
     ) -> list[dict[str, Any]]:
         """Get list of vulnerable packages across scans."""
         query = db.session.query(
@@ -144,14 +144,14 @@ class ScanService:
         ).join(
             ScanResult
         )
-        
+
         if project_name:
             query = query.filter(ScanResult.project_name == project_name)
         if severity:
             query = query.filter(Vulnerability.severity == severity)
-        
+
         query = query.order_by(Vulnerability.cvss_score.desc().nullslast())
-        
+
         return [
             {
                 "package_name": pkg,

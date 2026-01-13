@@ -2,9 +2,8 @@
 
 import uuid
 from datetime import datetime
-from typing import Optional
 
-from sqlalchemy import Column, String, Text, Numeric, Integer, Boolean, DateTime, ForeignKey, JSON
+from sqlalchemy import JSON, Column, DateTime, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -95,10 +94,10 @@ class ScanResult(db.Model):
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "completed_at": self.completed_at.isoformat() if self.completed_at else None,
         }
-        
+
         if include_vulnerabilities:
             result["vulnerabilities"] = [sv.to_dict() for sv in self.vulnerabilities]
-        
+
         return result
 
 

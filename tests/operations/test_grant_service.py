@@ -3,7 +3,6 @@
 from datetime import date, timedelta
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
-from uuid import uuid4
 
 import pytest
 
@@ -25,14 +24,14 @@ class TestGrantService:
         with patch("operations.services.grant_service.get_db") as mock_get_db:
             mock_get_db.return_value.__enter__ = MagicMock(return_value=mock_session)
             mock_get_db.return_value.__exit__ = MagicMock(return_value=None)
-            
+
             from operations.services.grant_service import GrantService
             service = GrantService()
             return service
 
     def test_create_grant(self, grant_service, mock_session):
         """Test creating a new grant."""
-        grant_data = {
+        {
             "organization_name": "Test Nonprofit",
             "grant_name": "Community Support Grant",
             "funding_agency": "Example Foundation",
@@ -40,11 +39,11 @@ class TestGrantService:
             "deadline": date.today() + timedelta(days=30),
             "description": "Grant for community programs",
         }
-        
+
         # Mock the add method
         mock_session.add = MagicMock()
         mock_session.flush = MagicMock()
-        
+
         # The service should not raise an error
         # Full integration would require actual DB
 
@@ -57,9 +56,9 @@ class TestGrantService:
             "amount": Decimal("10000"),
             "deadline": date.today() + timedelta(days=10),
         }
-        
+
         # Test that deadline in the past would be flagged
-        past_deadline = {
+        {
             **valid_data,
             "deadline": date.today() - timedelta(days=1),
         }
@@ -68,12 +67,12 @@ class TestGrantService:
     def test_calculate_priority(self, grant_service):
         """Test grant priority calculation."""
         # Near deadline should be higher priority
-        near_deadline = date.today() + timedelta(days=3)
-        far_deadline = date.today() + timedelta(days=60)
-        
+        date.today() + timedelta(days=3)
+        date.today() + timedelta(days=60)
+
         # Higher amount should factor into priority
-        high_amount = Decimal("100000")
-        low_amount = Decimal("1000")
+        Decimal("100000")
+        Decimal("1000")
 
 
 class TestGrantPipeline:
@@ -81,28 +80,12 @@ class TestGrantPipeline:
 
     def test_pipeline_stages_order(self):
         """Test that pipeline stages are in correct order."""
-        expected_stages = [
-            "research",
-            "drafting",
-            "review",
-            "submission",
-            "awarded",
-            "reporting",
-        ]
-        
+
         # This tests the expected workflow
 
     def test_stage_transitions(self):
         """Test valid stage transitions."""
-        valid_transitions = {
-            "research": ["drafting", "cancelled"],
-            "drafting": ["review", "research", "cancelled"],
-            "review": ["submission", "drafting", "cancelled"],
-            "submission": ["awarded", "rejected"],
-            "awarded": ["reporting"],
-            "reporting": ["completed"],
-        }
-        
+
         # Verify each transition is valid
 
 
@@ -111,25 +94,24 @@ class TestMilestoneTracking:
 
     def test_milestone_completion(self):
         """Test marking milestone as complete."""
-        milestone_data = {
+        {
             "title": "Submit LOI",
             "due_date": date.today() + timedelta(days=7),
             "description": "Submit letter of intent",
         }
-        
+
         # Test completion logic
 
     def test_overdue_milestone_detection(self):
         """Test detection of overdue milestones."""
-        overdue_milestone = {
+        {
             "title": "Past Due Task",
             "due_date": date.today() - timedelta(days=3),
             "completed": False,
         }
-        
+
         # Should be flagged as overdue
 
     def test_milestone_reminder_schedule(self):
         """Test milestone reminder scheduling."""
         # Milestones due within 3 days should trigger reminders
-        reminder_threshold = 3  # days

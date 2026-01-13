@@ -1,13 +1,22 @@
 """Database models for Operations."""
 
 import uuid
-from datetime import datetime, date
-from typing import Optional
-from decimal import Decimal
+from datetime import UTC, datetime
 
-from sqlalchemy import Column, String, Text, Numeric, Integer, Boolean, DateTime, Date, ForeignKey, JSON
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    Column,
+    Date,
+    DateTime,
+    ForeignKey,
+    Integer,
+    Numeric,
+    String,
+    Text,
+)
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship, declarative_base
+from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
 
@@ -41,7 +50,7 @@ class Grant(Base):
     # Status values
     STATUSES = [
         "prospecting",
-        "researching", 
+        "researching",
         "drafting",
         "internal_review",
         "submitted",
@@ -74,23 +83,22 @@ class Grant(Base):
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
-        
+
         if include_milestones:
             result["milestones"] = [m.to_dict() for m in self.milestones]
-        
+
         return result
 
     @property
-    def days_until_deadline(self) -> Optional[int]:
+    def days_until_deadline(self) -> int | None:
         """Calculate days until submission deadline."""
         if not self.submission_deadline:
             return None
-        
+
         now = datetime.utcnow()
         if self.submission_deadline.tzinfo:
-            from datetime import timezone
-            now = now.replace(tzinfo=timezone.utc)
-        
+            now = now.replace(tzinfo=UTC)
+
         delta = self.submission_deadline - now
         return delta.days
 

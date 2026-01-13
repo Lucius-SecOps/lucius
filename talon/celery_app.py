@@ -42,7 +42,7 @@ class ContextTask(celery.Task):
 
     def __call__(self, *args, **kwargs):
         from talon.app import create_app
-        
+
         app = create_app()
         with app.app_context():
             return self.run(*args, **kwargs)
@@ -51,4 +51,4 @@ class ContextTask(celery.Task):
 celery.Task = ContextTask
 
 # Import tasks to register them
-from talon.tasks import notifications, threat_scoring, maintenance  # noqa
+from talon.tasks import maintenance, notifications, threat_scoring  # noqa

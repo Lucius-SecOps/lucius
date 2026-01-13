@@ -6,13 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from sentinel.parsers import (
-    NPMParser,
-    PipParser,
-    ComposerParser,
-    ParserFactory,
-    Dependency,
-)
+from sentinel.parsers import ComposerParser, Dependency, NPMParser, ParserFactory, PipParser
 
 
 class TestNPMParser:
@@ -67,10 +61,10 @@ class TestPipParser:
             dependencies = parser.parse(Path(f.name))
 
         assert len(dependencies) == 4
-        
+
         flask_dep = next(d for d in dependencies if d.name == "flask")
         assert flask_dep.version == "2.3.0"
-        
+
         requests_dep = next(d for d in dependencies if d.name == "requests")
         assert requests_dep.version == "2.28.0"
 
@@ -115,7 +109,7 @@ class TestComposerParser:
         """Test parsing only production dependencies."""
         # Modify to only have packages
         sample_composer_lock.pop("packages-dev")
-        
+
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=".json", delete=False
         ) as f:

@@ -10,17 +10,16 @@ import pickle
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
-import numpy as np
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import cross_val_score
 import joblib
+import numpy as np
+from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
+from sklearn.preprocessing import StandardScaler
 
-from talon.models import Vulnerability
-from .feature_engineering import VulnerabilityFeatureExtractor
 from shared.logging import get_logger
+from talon.models import Vulnerability
+
+from .feature_engineering import VulnerabilityFeatureExtractor
 
 logger = get_logger(__name__)
 
@@ -41,10 +40,10 @@ class ThreatModel:
 
     model: any  # RandomForestRegressor or similar
     scaler: StandardScaler
-    feature_names: List[str]
+    feature_names: list[str]
     version: str
     trained_at: datetime
-    metrics: Dict[str, float]
+    metrics: dict[str, float]
 
     def predict(self, features: np.ndarray) -> np.ndarray:
         """
@@ -67,7 +66,7 @@ class ThreatModel:
 
         return scores
 
-    def get_feature_importance(self) -> Dict[str, float]:
+    def get_feature_importance(self) -> dict[str, float]:
         """
         Get feature importances from the model.
 
@@ -78,7 +77,7 @@ class ThreatModel:
             return {}
 
         importances = self.model.feature_importances_
-        return dict(zip(self.feature_names, importances))
+        return dict(zip(self.feature_names, importances, strict=False))
 
 
 class MLThreatScorer:
@@ -91,8 +90,8 @@ class MLThreatScorer:
 
     def __init__(
         self,
-        model_path: Optional[str] = None,
-        feature_extractor: Optional[VulnerabilityFeatureExtractor] = None
+        model_path: str | None = None,
+        feature_extractor: VulnerabilityFeatureExtractor | None = None
     ):
         """
         Initialize ML threat scorer.
@@ -104,7 +103,7 @@ class MLThreatScorer:
         self.feature_extractor = (
             feature_extractor or VulnerabilityFeatureExtractor()
         )
-        self.model: Optional[ThreatModel] = None
+        self.model: ThreatModel | None = None
 
         # Default model path
         if model_path is None:
@@ -132,8 +131,8 @@ class MLThreatScorer:
     def calculate_threat_score(
         self,
         vulnerability: Vulnerability,
-        package_stats: Optional[Dict] = None
-    ) -> Tuple[float, Dict[str, float]]:
+        package_stats: dict | None = None
+    ) -> tuple[float, dict[str, float]]:
         """
         Calculate threat score for a vulnerability.
 
@@ -164,9 +163,9 @@ class MLThreatScorer:
 
     def batch_calculate(
         self,
-        vulnerabilities: List[Vulnerability],
-        package_stats: Optional[Dict] = None
-    ) -> List[Tuple[str, float]]:
+        vulnerabilities: list[Vulnerability],
+        package_stats: dict | None = None
+    ) -> list[tuple[str, float]]:
         """
         Calculate threat scores for multiple vulnerabilities.
 
@@ -185,7 +184,7 @@ class MLThreatScorer:
 
         return sorted(results, key=lambda x: x[1], reverse=True)
 
-    def _predict_ml_score(self, features: Dict[str, float]) -> float:
+    def _predict_ml_score(self, features: dict[str, float]) -> float:
         """Predict threat score using ML model."""
         if self.model is None:
             raise ValueError("Model not loaded")
@@ -203,7 +202,7 @@ class MLThreatScorer:
 
     def _calculate_rule_based_score(
         self,
-        features: Dict[str, float]
+        features: dict[str, float]
     ) -> float:
         """
         Fallback rule-based scoring when ML model unavailable.
@@ -237,7 +236,7 @@ class MLThreatScorer:
 
         return round(score, 2)
 
-    def get_feature_importance(self) -> Dict[str, float]:
+    def get_feature_importance(self) -> dict[str, float]:
         """Get feature importance from loaded model."""
         if self.model is None:
             return {}

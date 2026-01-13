@@ -7,23 +7,18 @@ Includes synthetic data generation for testing/bootstrapping.
 
 import random
 from datetime import datetime, timedelta
-from typing import Dict, List, Tuple
 from uuid import uuid4
 
 import numpy as np
-import pandas as pd
-from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.model_selection import cross_val_score, train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import (
-    mean_squared_error,
-    mean_absolute_error,
-    r2_score
-)
 
+from shared.logging import get_logger
 from talon.models import Vulnerability
+
 from .feature_engineering import VulnerabilityFeatureExtractor
 from .threat_model import ThreatModel, create_threat_model
-from shared.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -50,8 +45,8 @@ class ThreatModelTrainer:
 
     def train(
         self,
-        vulnerabilities: List[Vulnerability],
-        ground_truth_scores: List[float],
+        vulnerabilities: list[Vulnerability],
+        ground_truth_scores: list[float],
         model_type: str = "random_forest",
         test_size: float = 0.2,
         **model_kwargs
@@ -143,9 +138,9 @@ class ThreatModelTrainer:
     def evaluate(
         self,
         model: ThreatModel,
-        vulnerabilities: List[Vulnerability],
-        ground_truth_scores: List[float]
-    ) -> Dict[str, float]:
+        vulnerabilities: list[Vulnerability],
+        ground_truth_scores: list[float]
+    ) -> dict[str, float]:
         """
         Evaluate a trained model on new data.
 
@@ -180,7 +175,7 @@ class ThreatModelTrainer:
     def generate_synthetic_training_data(
         self,
         n_samples: int = 1000
-    ) -> Tuple[List[Vulnerability], List[float]]:
+    ) -> tuple[list[Vulnerability], list[float]]:
         """
         Generate synthetic CVE data for training.
 
@@ -207,7 +202,7 @@ class ThreatModelTrainer:
 
     def _generate_synthetic_vulnerability(
         self
-    ) -> Tuple[Vulnerability, float]:
+    ) -> tuple[Vulnerability, float]:
         """
         Generate a single synthetic vulnerability with ground truth score.
 

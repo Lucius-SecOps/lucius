@@ -1,13 +1,10 @@
 """ML-based threat scoring service."""
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import Any, Optional
+from datetime import UTC, datetime
 
-import numpy as np
-
-from talon.models import Vulnerability
 from shared.logging import get_logger
+from talon.models import Vulnerability
 
 logger = get_logger(__name__)
 
@@ -15,13 +12,13 @@ logger = get_logger(__name__)
 @dataclass
 class ThreatFactors:
     """Factors contributing to threat score."""
-    
+
     cvss_score: float
     severity_weight: float
     exploit_likelihood: float
     age_factor: float
     affected_scope: float
-    
+
     def to_dict(self) -> dict[str, float]:
         return {
             "cvss_score": self.cvss_score,
@@ -35,7 +32,7 @@ class ThreatFactors:
 class ThreatScoringService:
     """
     ML-based threat scoring for vulnerabilities.
-    
+
     Combines multiple factors to produce a 0-100 threat score
     that helps prioritize remediation efforts.
     """
@@ -77,7 +74,7 @@ class ThreatScoringService:
             age_factor=self._calculate_age_factor(vulnerability.published_date),
             affected_scope=self._calculate_affected_scope(vulnerability),
         )
-        
+
         # Weighted combination of factors
         weights = {
             "cvss_score": 0.35,
@@ -86,7 +83,7 @@ class ThreatScoringService:
             "age_factor": 0.10,
             "affected_scope": 0.10,
         }
-        
+
         score = (
             factors.cvss_score * weights["cvss_score"] +
             factors.severity_weight * weights["severity_weight"] +
@@ -94,15 +91,15 @@ class ThreatScoringService:
             factors.age_factor * weights["age_factor"] +
             factors.affected_scope * weights["affected_scope"]
         ) * 100
-        
+
         # Clamp to 0-100
         score = max(0, min(100, score))
-        
+
         logger.debug(f"Calculated threat score for {vulnerability.cve_id}: {score:.2f}")
-        
+
         return round(score, 2), factors.to_dict()
 
-    def _normalize_cvss(self, cvss_score: Optional[float]) -> float:
+    def _normalize_cvss(self, cvss_score: float | None) -> float:
         """Normalize CVSS score to 0-1 range."""
         if cvss_score is None:
             return 0.5  # Default for unknown
@@ -115,36 +112,35 @@ class ThreatScoringService:
     def _calculate_exploit_likelihood(self, vulnerability: Vulnerability) -> float:
         """
         Calculate likelihood of exploitation based on CVSS vector.
-        
+
         Higher scores indicate easier exploitation.
         """
         cvss_vector = vulnerability.cvss_vector or ""
-        
+
         # Count exploit indicators present
         indicator_count = sum(
             1 for indicator in self.EXPLOIT_INDICATORS
             if indicator in cvss_vector
         )
-        
+
         # Normalize to 0-1
         return indicator_count / len(self.EXPLOIT_INDICATORS)
 
-    def _calculate_age_factor(self, published_date: Optional[datetime]) -> float:
+    def _calculate_age_factor(self, published_date: datetime | None) -> float:
         """
         Calculate age factor - newer vulnerabilities get higher scores.
-        
+
         Returns higher values for more recent vulnerabilities.
         """
         if not published_date:
             return 0.5  # Default for unknown age
-        
+
         now = datetime.utcnow()
         if published_date.tzinfo:
-            from datetime import timezone
-            now = now.replace(tzinfo=timezone.utc)
-        
+            now = now.replace(tzinfo=UTC)
+
         age_days = (now - published_date).days
-        
+
         # Newer vulnerabilities (< 30 days) get higher scores
         if age_days < 30:
             return 1.0
@@ -160,12 +156,12 @@ class ThreatScoringService:
     def _calculate_affected_scope(self, vulnerability: Vulnerability) -> float:
         """
         Calculate affected scope based on number of affected packages.
-        
+
         More affected packages = higher threat.
         """
         affected = vulnerability.affected_packages or []
         count = len(affected)
-        
+
         # Use logarithmic scale
         if count == 0:
             return 0.2
@@ -184,11 +180,11 @@ class ThreatScoringService:
     ) -> list[tuple[str, float]]:
         """Calculate threat scores for multiple vulnerabilities."""
         results = []
-        
+
         for vuln in vulnerabilities:
             score, _ = self.calculate_threat_score(vuln)
             results.append((vuln.cve_id, score))
-        
+
         return sorted(results, key=lambda x: x[1], reverse=True)
 
     def get_high_threat_vulnerabilities(

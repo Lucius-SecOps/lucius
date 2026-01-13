@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from sentinel.sbom import SBOMGenerator, CycloneDXGenerator, SPDXGenerator
 from sentinel.parsers import Dependency
+from sentinel.sbom import CycloneDXGenerator, SBOMGenerator, SPDXGenerator
 
 
 class TestSBOMGenerator:

@@ -1,15 +1,14 @@
 """Scans API endpoints."""
 
-from datetime import datetime
 from uuid import UUID
 
 from flask import request
 from flask_restx import Namespace, Resource, fields
 
-from talon.extensions import db
-from talon.models import ScanResult, ScanVulnerability, Vulnerability
-from talon.services.scan_service import ScanService
 from shared.logging import get_logger
+from talon.extensions import db
+from talon.models import ScanResult
+from talon.services.scan_service import ScanService
 
 logger = get_logger(__name__)
 
@@ -73,17 +72,17 @@ class ScanList(Resource):
         status = request.args.get("status")
         limit = request.args.get("limit", 50, type=int)
         offset = request.args.get("offset", 0, type=int)
-        
+
         query = ScanResult.query
-        
+
         if project:
             query = query.filter(ScanResult.project_name.ilike(f"%{project}%"))
         if status:
             query = query.filter(ScanResult.status == status)
-        
+
         query = query.order_by(ScanResult.created_at.desc())
         scans = query.offset(offset).limit(limit).all()
-        
+
         return [scan.to_dict() for scan in scans]
 
     @scans_ns.doc("create_scan")
@@ -92,12 +91,12 @@ class ScanList(Resource):
     def post(self):
         """Create a new scan result."""
         data = request.json
-        
+
         logger.info(f"Received scan result for project: {data.get('project_name')}")
-        
+
         scan_service = ScanService()
         scan = scan_service.create_scan(data)
-        
+
         return scan.to_dict(), 201
 
 
@@ -114,11 +113,11 @@ class ScanResource(Resource):
             uuid_id = UUID(scan_id)
         except ValueError:
             scans_ns.abort(400, "Invalid scan ID format")
-        
+
         scan = ScanResult.query.get(uuid_id)
         if not scan:
             scans_ns.abort(404, "Scan not found")
-        
+
         return scan.to_dict(include_vulnerabilities=True)
 
     @scans_ns.doc("delete_scan")
@@ -129,14 +128,14 @@ class ScanResource(Resource):
             uuid_id = UUID(scan_id)
         except ValueError:
             scans_ns.abort(400, "Invalid scan ID format")
-        
+
         scan = ScanResult.query.get(uuid_id)
         if not scan:
             scans_ns.abort(404, "Scan not found")
-        
+
         db.session.delete(scan)
         db.session.commit()
-        
+
         logger.info(f"Deleted scan: {scan_id}")
         return "", 204
 
@@ -153,11 +152,11 @@ class ScanVulnerabilities(Resource):
             uuid_id = UUID(scan_id)
         except ValueError:
             scans_ns.abort(400, "Invalid scan ID format")
-        
+
         scan = ScanResult.query.get(uuid_id)
         if not scan:
             scans_ns.abort(404, "Scan not found")
-        
+
         return [sv.to_dict() for sv in scan.vulnerabilities]
 
 
@@ -169,20 +168,20 @@ class ScanStats(Resource):
     def get(self):
         """Get overall scan statistics."""
         from sqlalchemy import func
-        
+
         total_scans = ScanResult.query.count()
-        
+
         severity_stats = db.session.query(
             func.sum(ScanResult.critical_count).label("critical"),
             func.sum(ScanResult.high_count).label("high"),
             func.sum(ScanResult.medium_count).label("medium"),
             func.sum(ScanResult.low_count).label("low"),
         ).first()
-        
+
         recent_scans = ScanResult.query.order_by(
             ScanResult.created_at.desc()
         ).limit(5).all()
-        
+
         return {
             "total_scans": total_scans,
             "total_vulnerabilities": {

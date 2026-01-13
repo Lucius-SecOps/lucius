@@ -6,13 +6,14 @@ from uuid import UUID
 
 from flask import request
 from flask_restx import Namespace, Resource, fields
-from marshmallow import Schema, fields as ma_fields, validate, ValidationError, EXCLUDE
+from marshmallow import EXCLUDE, Schema, ValidationError, validate
+from marshmallow import fields as ma_fields
 
+from shared.logging import get_logger
 from talon.extensions import db
 from talon.models import Vulnerability
-from talon.services.vulnerability_service import VulnerabilityService
 from talon.services.threat_scoring import ThreatScoringService
-from shared.logging import get_logger
+from talon.services.vulnerability_service import VulnerabilityService
 
 logger = get_logger(__name__)
 
@@ -734,7 +735,7 @@ class VulnerabilityDashboard(Resource):
         - Vulnerability trends over time
         """
         try:
-            from sqlalchemy import func, extract
+            from sqlalchemy import func
 
             # Total count
             total = Vulnerability.query.count()
@@ -867,7 +868,7 @@ class VulnerabilityStats(Resource):
 
             return {
                 "total_vulnerabilities": total,
-                "by_severity": {sev: count for sev, count in by_severity},
+                "by_severity": dict(by_severity),
                 "average_cvss_score": round(float(avg_cvss), 2) if avg_cvss else 0,
                 "high_threat_count": high_threat,
             }, 200

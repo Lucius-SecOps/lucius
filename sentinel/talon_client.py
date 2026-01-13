@@ -1,6 +1,6 @@
 """Talon API client for posting scan results."""
 
-from typing import Any, Optional
+from typing import Any
 
 import httpx
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -16,7 +16,7 @@ class TalonClient:
 
     def __init__(self) -> None:
         self.config = config.talon
-        self._client: Optional[httpx.AsyncClient] = None
+        self._client: httpx.AsyncClient | None = None
 
     async def __aenter__(self) -> "TalonClient":
         """Async context manager entry."""
@@ -62,15 +62,15 @@ class TalonClient:
             headers=self._get_headers(),
         ) as client:
             logger.info(f"Posting scan results to Talon API: {self.config.api_url}")
-            
+
             try:
                 response = await client.post("/api/v1/scans", json=result)
                 response.raise_for_status()
-                
+
                 data = response.json()
                 logger.info(f"Successfully posted scan results, ID: {data.get('id')}")
                 return data
-                
+
             except httpx.HTTPStatusError as e:
                 logger.error(f"HTTP error posting to Talon: {e.response.status_code}")
                 raise
@@ -78,7 +78,7 @@ class TalonClient:
                 logger.error(f"Error posting to Talon: {e}")
                 raise
 
-    async def get_scan(self, scan_id: str) -> Optional[dict[str, Any]]:
+    async def get_scan(self, scan_id: str) -> dict[str, Any] | None:
         """
         Get scan details from Talon.
 
@@ -102,7 +102,7 @@ class TalonClient:
                     return None
                 raise
 
-    async def get_vulnerability(self, cve_id: str) -> Optional[dict[str, Any]]:
+    async def get_vulnerability(self, cve_id: str) -> dict[str, Any] | None:
         """
         Get vulnerability details from Talon.
 

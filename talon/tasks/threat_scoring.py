@@ -1,10 +1,10 @@
 """Threat scoring Celery tasks."""
 
+from shared.logging import get_logger
 from talon.celery_app import celery
 from talon.extensions import db
 from talon.models import Vulnerability
 from talon.services.threat_scoring import ThreatScoringService
-from shared.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -21,25 +21,25 @@ def update_threat_scores() -> dict:
         Summary of updated scores
     """
     service = ThreatScoringService()
-    
+
     # Get vulnerabilities that need score updates
     # Focus on those without scores or older than 24 hours
     from datetime import datetime, timedelta
-    
+
     cutoff = datetime.utcnow() - timedelta(hours=24)
-    
+
     vulnerabilities = Vulnerability.query.filter(
         db.or_(
             Vulnerability.threat_score.is_(None),
             Vulnerability.updated_at < cutoff,
         )
     ).limit(500).all()
-    
+
     if not vulnerabilities:
         return {"updated": 0}
-    
+
     logger.info(f"Updating threat scores for {len(vulnerabilities)} vulnerabilities")
-    
+
     updated = 0
     for vuln in vulnerabilities:
         try:
@@ -48,11 +48,11 @@ def update_threat_scores() -> dict:
             updated += 1
         except Exception as e:
             logger.error(f"Error calculating score for {vuln.cve_id}: {e}")
-    
+
     db.session.commit()
-    
+
     logger.info(f"Updated {updated} threat scores")
-    
+
     return {"updated": updated}
 
 
@@ -68,16 +68,16 @@ def calculate_single_threat_score(cve_id: str) -> dict:
         Score result
     """
     vulnerability = Vulnerability.query.filter_by(cve_id=cve_id).first()
-    
+
     if not vulnerability:
         return {"status": "error", "message": f"Vulnerability {cve_id} not found"}
-    
+
     service = ThreatScoringService()
     score, factors = service.calculate_threat_score(vulnerability)
-    
+
     vulnerability.threat_score = score
     db.session.commit()
-    
+
     return {
         "status": "success",
         "cve_id": cve_id,
@@ -102,7 +102,7 @@ def identify_high_threat_vulnerabilities(threshold: float = 70.0) -> dict:
     ).order_by(
         Vulnerability.threat_score.desc()
     ).limit(100).all()
-    
+
     return {
         "count": len(high_threat),
         "vulnerabilities": [

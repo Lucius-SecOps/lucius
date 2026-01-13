@@ -2,7 +2,7 @@
 
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID
 
 from sqlalchemy.orm import Session
@@ -19,7 +19,7 @@ class GrantRepository:
     def __init__(self, session: Session):
         self.session = session
 
-    def get_by_id(self, grant_id: str | UUID) -> Optional[Grant]:
+    def get_by_id(self, grant_id: str | UUID) -> Grant | None:
         """Get grant by ID."""
         if isinstance(grant_id, str):
             grant_id = UUID(grant_id)
@@ -27,18 +27,18 @@ class GrantRepository:
 
     def get_all(
         self,
-        status: Optional[str] = None,
-        priority: Optional[str] = None,
+        status: str | None = None,
+        priority: str | None = None,
         limit: int = 100,
     ) -> list[Grant]:
         """Get all grants with optional filtering."""
         query = self.session.query(Grant)
-        
+
         if status:
             query = query.filter(Grant.status == status)
         if priority:
             query = query.filter(Grant.priority == priority)
-        
+
         return query.order_by(Grant.submission_deadline.asc().nullslast()).limit(limit).all()
 
     def get_by_deadline_range(
@@ -75,7 +75,7 @@ class MilestoneRepository:
     def __init__(self, session: Session):
         self.session = session
 
-    def get_by_id(self, milestone_id: str | UUID) -> Optional[GrantMilestone]:
+    def get_by_id(self, milestone_id: str | UUID) -> GrantMilestone | None:
         """Get milestone by ID."""
         if isinstance(milestone_id, str):
             milestone_id = UUID(milestone_id)
@@ -93,7 +93,7 @@ class MilestoneRepository:
         """Get upcoming milestones."""
         now = datetime.utcnow()
         end_date = now + timedelta(days=days)
-        
+
         return self.session.query(GrantMilestone).filter(
             GrantMilestone.due_date >= now,
             GrantMilestone.due_date <= end_date,
@@ -124,11 +124,11 @@ class GrantService:
         self,
         grant_name: str,
         funder: str,
-        amount: Optional[float] = None,
-        submission_deadline: Optional[datetime] = None,
+        amount: float | None = None,
+        submission_deadline: datetime | None = None,
         priority: str = "medium",
-        description: Optional[str] = None,
-        requirements: Optional[dict] = None,
+        description: str | None = None,
+        requirements: dict | None = None,
     ) -> Grant:
         """Create a new grant."""
         grant = Grant(
@@ -141,46 +141,46 @@ class GrantService:
             requirements=requirements or {},
             status="prospecting",
         )
-        
+
         grant = self.grant_repo.create(grant)
         logger.info(f"Created grant: {grant.grant_name} (ID: {grant.id})")
-        
+
         return grant
 
     def update_grant(
         self,
         grant_id: str,
-        status: Optional[str] = None,
-        priority: Optional[str] = None,
+        status: str | None = None,
+        priority: str | None = None,
         **kwargs,
-    ) -> Optional[Grant]:
+    ) -> Grant | None:
         """Update a grant."""
         grant = self.grant_repo.get_by_id(grant_id)
         if not grant:
             return None
-        
+
         if status and status in Grant.STATUSES:
             grant.status = status
         if priority and priority in Grant.PRIORITIES:
             grant.priority = priority
-        
+
         for key, value in kwargs.items():
             if hasattr(grant, key) and value is not None:
                 setattr(grant, key, value)
-        
+
         grant = self.grant_repo.update(grant)
         logger.info(f"Updated grant: {grant.grant_name}")
-        
+
         return grant
 
-    def get_grant(self, grant_id: str) -> Optional[Grant]:
+    def get_grant(self, grant_id: str) -> Grant | None:
         """Get a grant by ID."""
         return self.grant_repo.get_by_id(grant_id)
 
     def list_grants(
         self,
-        status: Optional[str] = None,
-        priority: Optional[str] = None,
+        status: str | None = None,
+        priority: str | None = None,
     ) -> list[Grant]:
         """List grants with optional filtering."""
         return self.grant_repo.get_all(status=status, priority=priority)
@@ -196,13 +196,13 @@ class GrantService:
         grant_id: str,
         milestone_name: str,
         due_date: datetime,
-        description: Optional[str] = None,
-    ) -> Optional[GrantMilestone]:
+        description: str | None = None,
+    ) -> GrantMilestone | None:
         """Add a milestone to a grant."""
         grant = self.grant_repo.get_by_id(grant_id)
         if not grant:
             return None
-        
+
         milestone = GrantMilestone(
             grant_id=grant.id,
             milestone_name=milestone_name,
@@ -210,43 +210,43 @@ class GrantService:
             description=description,
             status="pending",
         )
-        
+
         milestone = self.milestone_repo.create(milestone)
         logger.info(f"Added milestone to grant {grant_id}: {milestone_name}")
-        
+
         return milestone
 
-    def complete_milestone(self, milestone_id: str) -> Optional[GrantMilestone]:
+    def complete_milestone(self, milestone_id: str) -> GrantMilestone | None:
         """Mark a milestone as completed."""
         milestone = self.milestone_repo.get_by_id(milestone_id)
         if not milestone:
             return None
-        
+
         milestone.status = "completed"
         milestone.completed_at = datetime.utcnow()
-        
+
         milestone = self.milestone_repo.update(milestone)
         logger.info(f"Completed milestone: {milestone.milestone_name}")
-        
+
         return milestone
 
     def get_pipeline_summary(self) -> dict[str, Any]:
         """Get grant pipeline summary."""
         all_grants = self.grant_repo.get_all(limit=1000)
-        
+
         by_status = {}
         total_amount = Decimal("0")
         awarded_amount = Decimal("0")
-        
+
         for grant in all_grants:
             status = grant.status
             by_status[status] = by_status.get(status, 0) + 1
-            
+
             if grant.amount:
                 total_amount += grant.amount
                 if grant.status == "awarded":
                     awarded_amount += grant.amount
-        
+
         return {
             "total_grants": len(all_grants),
             "by_status": by_status,

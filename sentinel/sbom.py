@@ -38,7 +38,7 @@ class SBOMGenerator:
     def _generate_cyclonedx(self, scan_result: dict[str, Any]) -> str:
         """Generate CycloneDX format SBOM."""
         components = []
-        
+
         for dep in scan_result.get("dependencies", []):
             component = {
                 "type": "library",
@@ -46,16 +46,16 @@ class SBOMGenerator:
                 "version": dep.get("version", ""),
                 "purl": self._create_purl(dep),
             }
-            
+
             # Add ecosystem-specific info
             ecosystem = dep.get("ecosystem", "")
             if ecosystem:
                 component["properties"] = [
                     {"name": "ecosystem", "value": ecosystem}
                 ]
-            
+
             components.append(component)
-        
+
         # Find vulnerabilities for components
         vulnerabilities = []
         for vuln in scan_result.get("vulnerabilities", []):
@@ -77,7 +77,7 @@ class SBOMGenerator:
                     }
                 ],
             }
-            
+
             if vuln.get("cvss_score"):
                 vuln_entry["ratings"].append({
                     "source": {"name": "NVD"},
@@ -86,9 +86,9 @@ class SBOMGenerator:
                     "method": "CVSSv3",
                     "vector": vuln.get("cvss_vector", ""),
                 })
-            
+
             vulnerabilities.append(vuln_entry)
-        
+
         sbom = {
             "bomFormat": "CycloneDX",
             "specVersion": "1.5",
@@ -111,21 +111,21 @@ class SBOMGenerator:
             },
             "components": components,
         }
-        
+
         if vulnerabilities:
             sbom["vulnerabilities"] = vulnerabilities
-        
+
         return json.dumps(sbom, indent=2)
 
     def _generate_spdx(self, scan_result: dict[str, Any]) -> str:
         """Generate SPDX format SBOM."""
         packages = []
         relationships = []
-        
+
         document_namespace = f"https://lucius.io/spdx/{uuid.uuid4()}"
         document_spdx_id = "SPDXRef-DOCUMENT"
         root_package_id = "SPDXRef-RootPackage"
-        
+
         # Root package
         packages.append({
             "SPDXID": root_package_id,
@@ -134,11 +134,11 @@ class SBOMGenerator:
             "downloadLocation": "NOASSERTION",
             "filesAnalyzed": False,
         })
-        
+
         # Dependencies
         for i, dep in enumerate(scan_result.get("dependencies", [])):
             pkg_id = f"SPDXRef-Package-{i}"
-            
+
             packages.append({
                 "SPDXID": pkg_id,
                 "name": dep.get("name", ""),
@@ -153,20 +153,20 @@ class SBOMGenerator:
                 ],
                 "filesAnalyzed": False,
             })
-            
+
             relationships.append({
                 "spdxElementId": root_package_id,
                 "relatedSpdxElement": pkg_id,
                 "relationshipType": "DEPENDS_ON",
             })
-        
+
         # Document relationship
         relationships.append({
             "spdxElementId": document_spdx_id,
             "relatedSpdxElement": root_package_id,
             "relationshipType": "DESCRIBES",
         })
-        
+
         sbom = {
             "spdxVersion": "SPDX-2.3",
             "dataLicense": "CC0-1.0",
@@ -180,7 +180,7 @@ class SBOMGenerator:
             "packages": packages,
             "relationships": relationships,
         }
-        
+
         return json.dumps(sbom, indent=2)
 
     def _create_purl(self, dep: dict[str, Any]) -> str:
@@ -188,23 +188,23 @@ class SBOMGenerator:
         ecosystem = dep.get("ecosystem", "").lower()
         name = dep.get("name", "")
         version = dep.get("version", "")
-        
+
         purl_type_map = {
             "npm": "npm",
             "pip": "pypi",
             "composer": "composer",
         }
-        
+
         purl_type = purl_type_map.get(ecosystem, "generic")
-        
+
         # Handle scoped npm packages
         if purl_type == "npm" and name.startswith("@"):
             namespace, pkg_name = name.split("/", 1)
             return f"pkg:{purl_type}/{namespace}/{pkg_name}@{version}"
-        
+
         # Handle composer packages (vendor/package)
         if purl_type == "composer" and "/" in name:
             namespace, pkg_name = name.split("/", 1)
             return f"pkg:{purl_type}/{namespace}/{pkg_name}@{version}"
-        
+
         return f"pkg:{purl_type}/{name}@{version}"

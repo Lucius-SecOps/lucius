@@ -5,10 +5,10 @@ from uuid import UUID
 from flask import request
 from flask_restx import Namespace, Resource, fields
 
+from shared.logging import get_logger
 from talon.extensions import db
 from talon.models import Notification
 from talon.services.notification_service import NotificationService
-from shared.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -52,17 +52,17 @@ class NotificationList(Resource):
         status = request.args.get("status")
         channel = request.args.get("channel")
         limit = request.args.get("limit", 50, type=int)
-        
+
         query = Notification.query
-        
+
         if status:
             query = query.filter(Notification.status == status)
         if channel:
             query = query.filter(Notification.channel == channel)
-        
+
         query = query.order_by(Notification.created_at.desc())
         notifications = query.limit(limit).all()
-        
+
         return [n.to_dict() for n in notifications]
 
     @notifications_ns.doc("create_notification")
@@ -71,7 +71,7 @@ class NotificationList(Resource):
     def post(self):
         """Create and send a notification."""
         data = request.json
-        
+
         notification_service = NotificationService()
         notification = notification_service.create_notification(
             notification_type=data["notification_type"],
@@ -81,10 +81,10 @@ class NotificationList(Resource):
             body=data["body"],
             metadata=data.get("metadata", {}),
         )
-        
+
         # Queue for async sending
         notification_service.queue_notification(notification)
-        
+
         logger.info(f"Created notification: {notification.id}")
         return notification.to_dict(), 201
 
@@ -102,11 +102,11 @@ class NotificationResource(Resource):
             uuid_id = UUID(notification_id)
         except ValueError:
             notifications_ns.abort(400, "Invalid notification ID format")
-        
+
         notification = Notification.query.get(uuid_id)
         if not notification:
             notifications_ns.abort(404, "Notification not found")
-        
+
         return notification.to_dict()
 
 
@@ -122,14 +122,14 @@ class NotificationResend(Resource):
             uuid_id = UUID(notification_id)
         except ValueError:
             notifications_ns.abort(400, "Invalid notification ID format")
-        
+
         notification = Notification.query.get(uuid_id)
         if not notification:
             notifications_ns.abort(404, "Notification not found")
-        
+
         notification_service = NotificationService()
         notification_service.queue_notification(notification)
-        
+
         logger.info(f"Queued notification for resend: {notification_id}")
         return {"message": "Notification queued for resend"}
 
@@ -149,7 +149,7 @@ class SendAlert(Resource):
     def post(self):
         """Send an alert to multiple channels."""
         data = request.json
-        
+
         notification_service = NotificationService()
         results = notification_service.send_alert(
             title=data["title"],
@@ -158,7 +158,7 @@ class SendAlert(Resource):
             channels=data.get("channels", ["slack"]),
             recipients=data.get("recipients", {}),
         )
-        
+
         return {
             "message": "Alert sent",
             "results": results,
@@ -173,21 +173,21 @@ class NotificationStats(Resource):
     def get(self):
         """Get notification statistics."""
         from sqlalchemy import func
-        
+
         total = Notification.query.count()
-        
+
         by_status = db.session.query(
             Notification.status,
             func.count(Notification.id).label("count")
         ).group_by(Notification.status).all()
-        
+
         by_channel = db.session.query(
             Notification.channel,
             func.count(Notification.id).label("count")
         ).group_by(Notification.channel).all()
-        
+
         return {
             "total_notifications": total,
-            "by_status": {status: count for status, count in by_status},
-            "by_channel": {channel: count for channel, count in by_channel},
+            "by_status": dict(by_status),
+            "by_channel": dict(by_channel),
         }

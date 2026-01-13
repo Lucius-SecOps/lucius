@@ -4,18 +4,17 @@ import asyncio
 import json
 import sys
 from pathlib import Path
-from typing import Optional
 
 import click
 from rich.console import Console
-from rich.table import Table
 from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.table import Table
 
-from sentinel.scanner import VulnerabilityScanner
+from sentinel.config import config
 from sentinel.parsers import ParserFactory
 from sentinel.sbom import SBOMGenerator
+from sentinel.scanner import VulnerabilityScanner
 from sentinel.talon_client import TalonClient
-from sentinel.config import config
 
 console = Console()
 
@@ -48,7 +47,7 @@ def scan(
     ctx: click.Context,
     path: str,
     package_manager: str,
-    output: Optional[str],
+    output: str | None,
     output_format: str,
     severity: str,
     include_dev: bool,
@@ -56,9 +55,9 @@ def scan(
 ) -> None:
     """Scan a project for dependency vulnerabilities."""
     project_path = Path(path).resolve()
-    
+
     console.print(f"\n[bold blue]🔍 Scanning project:[/] {project_path}\n")
-    
+
     try:
         # Run the async scan
         result = asyncio.run(_run_scan(
@@ -68,7 +67,7 @@ def scan(
             include_dev=include_dev,
             post_to_talon=post_to_talon,
         ))
-        
+
         # Output results
         if output_format == "table":
             _display_table(result)
@@ -87,13 +86,13 @@ def scan(
                 console.print(f"[green]SBOM written to {output}[/]")
             else:
                 console.print(sbom_data)
-        
+
         # Exit with error code if vulnerabilities found
         if result.get("vulnerable_count", 0) > 0:
             critical_high = result.get("critical_count", 0) + result.get("high_count", 0)
             if critical_high > 0:
                 sys.exit(1)
-                
+
     except Exception as e:
         console.print(f"[bold red]Error:[/] {e}")
         if ctx.obj.get("verbose"):
@@ -119,7 +118,7 @@ async def _run_scan(
         parser = ParserFactory.create(package_manager, project_path)
         dependencies = await parser.parse(include_dev=include_dev)
         progress.update(task, description=f"Found {len(dependencies)} dependencies")
-        
+
         # Scan for vulnerabilities
         progress.update(task, description="Scanning for vulnerabilities...")
         scanner = VulnerabilityScanner()
@@ -129,14 +128,14 @@ async def _run_scan(
             severity_threshold=severity,
         )
         progress.update(task, description="Scan complete!")
-        
+
         # Post to Talon if requested
         if post_to_talon:
             progress.update(task, description="Posting results to Talon...")
             talon_client = TalonClient()
             await talon_client.post_scan_result(result)
             progress.update(task, description="Results posted to Talon!")
-    
+
     return result
 
 
@@ -147,32 +146,32 @@ def _display_table(result: dict) -> None:
     summary_table = Table(show_header=False, box=None)
     summary_table.add_column("Metric", style="cyan")
     summary_table.add_column("Value", style="white")
-    
+
     summary_table.add_row("Project", result.get("project_name", "Unknown"))
     summary_table.add_row("Package Manager", result.get("package_manager", "Unknown"))
     summary_table.add_row("Total Dependencies", str(result.get("total_dependencies", 0)))
     summary_table.add_row("Vulnerable Packages", str(result.get("vulnerable_count", 0)))
-    
+
     console.print(summary_table)
-    
+
     # Severity breakdown
     console.print("\n[bold]⚠️  Severity Breakdown[/]")
     severity_table = Table(show_header=True)
     severity_table.add_column("Severity", style="bold")
     severity_table.add_column("Count", justify="right")
-    
+
     severities = [
         ("Critical", result.get("critical_count", 0), "red"),
         ("High", result.get("high_count", 0), "orange1"),
         ("Medium", result.get("medium_count", 0), "yellow"),
         ("Low", result.get("low_count", 0), "blue"),
     ]
-    
+
     for sev_name, count, color in severities:
         severity_table.add_row(f"[{color}]{sev_name}[/]", str(count))
-    
+
     console.print(severity_table)
-    
+
     # Vulnerabilities list
     vulnerabilities = result.get("vulnerabilities", [])
     if vulnerabilities:
@@ -184,14 +183,14 @@ def _display_table(result: dict) -> None:
         vuln_table.add_column("Severity")
         vuln_table.add_column("CVSS")
         vuln_table.add_column("Fixed In")
-        
+
         severity_colors = {
             "CRITICAL": "red",
             "HIGH": "orange1",
             "MEDIUM": "yellow",
             "LOW": "blue",
         }
-        
+
         for vuln in vulnerabilities[:20]:  # Limit display
             severity = vuln.get("severity", "UNKNOWN")
             color = severity_colors.get(severity, "white")
@@ -203,9 +202,9 @@ def _display_table(result: dict) -> None:
                 str(vuln.get("cvss_score", "N/A")),
                 vuln.get("fixed_version", "N/A"),
             )
-        
+
         console.print(vuln_table)
-        
+
         if len(vulnerabilities) > 20:
             console.print(f"\n[dim]... and {len(vulnerabilities) - 20} more vulnerabilities[/]")
     else:
@@ -221,9 +220,9 @@ def _display_table(result: dict) -> None:
 def sbom(ctx: click.Context, path: str, output_format: str, output: str) -> None:
     """Generate a Software Bill of Materials (SBOM)."""
     project_path = Path(path).resolve()
-    
+
     console.print(f"\n[bold blue]📦 Generating SBOM for:[/] {project_path}\n")
-    
+
     try:
         result = asyncio.run(_generate_sbom(project_path, output_format))
         Path(output).write_text(result)
@@ -239,7 +238,7 @@ async def _generate_sbom(project_path: Path, output_format: str) -> str:
     """Generate SBOM asynchronously."""
     parser = ParserFactory.create("auto", project_path)
     dependencies = await parser.parse(include_dev=True)
-    
+
     sbom_generator = SBOMGenerator()
     return sbom_generator.generate(
         {
@@ -255,10 +254,9 @@ async def _generate_sbom(project_path: Path, output_format: str) -> str:
 @click.pass_context
 def lookup(ctx: click.Context, cve: str) -> None:
     """Lookup details for a specific CVE."""
-    from sentinel.nvd_client import NVDClient
-    
+
     console.print(f"\n[bold blue]🔍 Looking up:[/] {cve}\n")
-    
+
     try:
         result = asyncio.run(_lookup_cve(cve))
         if result:
@@ -272,10 +270,10 @@ def lookup(ctx: click.Context, cve: str) -> None:
         sys.exit(2)
 
 
-async def _lookup_cve(cve_id: str) -> Optional[dict]:
+async def _lookup_cve(cve_id: str) -> dict | None:
     """Lookup a CVE from NVD."""
     from sentinel.nvd_client import NVDClient
-    
+
     async with NVDClient() as client:
         return await client.get_cve(cve_id)
 

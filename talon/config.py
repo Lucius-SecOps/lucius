@@ -2,13 +2,12 @@
 
 import os
 from dataclasses import dataclass, field
-from typing import Optional
 
 
 @dataclass
 class DatabaseConfig:
     """Database configuration."""
-    
+
     url: str = field(
         default_factory=lambda: os.getenv(
             "DATABASE_URL",
@@ -23,7 +22,7 @@ class DatabaseConfig:
 @dataclass
 class RedisConfig:
     """Redis configuration."""
-    
+
     url: str = field(
         default_factory=lambda: os.getenv("REDIS_URL", "redis://localhost:6379/0")
     )
@@ -33,7 +32,7 @@ class RedisConfig:
 @dataclass
 class CeleryConfig:
     """Celery configuration."""
-    
+
     broker_url: str = field(
         default_factory=lambda: os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/1")
     )
@@ -53,17 +52,17 @@ class CeleryConfig:
 @dataclass
 class TwilioConfig:
     """Twilio SMS configuration."""
-    
-    account_sid: Optional[str] = field(
+
+    account_sid: str | None = field(
         default_factory=lambda: os.getenv("TWILIO_ACCOUNT_SID")
     )
-    auth_token: Optional[str] = field(
+    auth_token: str | None = field(
         default_factory=lambda: os.getenv("TWILIO_AUTH_TOKEN")
     )
-    from_number: Optional[str] = field(
+    from_number: str | None = field(
         default_factory=lambda: os.getenv("TWILIO_FROM_NUMBER")
     )
-    
+
     @property
     def is_configured(self) -> bool:
         return all([self.account_sid, self.auth_token, self.from_number])
@@ -72,14 +71,14 @@ class TwilioConfig:
 @dataclass
 class SendGridConfig:
     """SendGrid email configuration."""
-    
-    api_key: Optional[str] = field(
+
+    api_key: str | None = field(
         default_factory=lambda: os.getenv("SENDGRID_API_KEY")
     )
     from_email: str = field(
         default_factory=lambda: os.getenv("SENDGRID_FROM_EMAIL", "alerts@lucius.io")
     )
-    
+
     @property
     def is_configured(self) -> bool:
         return bool(self.api_key)
@@ -88,11 +87,11 @@ class SendGridConfig:
 @dataclass
 class SlackConfig:
     """Slack notification configuration."""
-    
-    webhook_url: Optional[str] = field(
+
+    webhook_url: str | None = field(
         default_factory=lambda: os.getenv("SLACK_WEBHOOK_URL")
     )
-    
+
     @property
     def is_configured(self) -> bool:
         return bool(self.webhook_url)
@@ -101,7 +100,7 @@ class SlackConfig:
 @dataclass
 class Config:
     """Main configuration container."""
-    
+
     # Flask
     secret_key: str = field(
         default_factory=lambda: os.getenv("SECRET_KEY", "change-me-in-production")
@@ -109,20 +108,20 @@ class Config:
     debug: bool = field(
         default_factory=lambda: os.getenv("FLASK_ENV") == "development"
     )
-    
+
     # Services
     database: DatabaseConfig = field(default_factory=DatabaseConfig)
     redis: RedisConfig = field(default_factory=RedisConfig)
     celery: CeleryConfig = field(default_factory=CeleryConfig)
-    
+
     # Notifications
     twilio: TwilioConfig = field(default_factory=TwilioConfig)
     sendgrid: SendGridConfig = field(default_factory=SendGridConfig)
     slack: SlackConfig = field(default_factory=SlackConfig)
-    
+
     # Logging
     log_level: str = field(default_factory=lambda: os.getenv("LOG_LEVEL", "INFO"))
-    
+
     @classmethod
     def from_env(cls) -> "Config":
         """Create configuration from environment variables."""

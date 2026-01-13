@@ -1,8 +1,6 @@
 """Tests for data cleaner service."""
 
-from io import StringIO
-from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -21,10 +19,10 @@ class TestDataCleaner:
         """Test EIN cleaning with valid formats."""
         # Standard format
         assert cleaner._clean_ein("12-3456789") == "12-3456789"
-        
+
         # No hyphen
         assert cleaner._clean_ein("123456789") == "12-3456789"
-        
+
         # With spaces
         assert cleaner._clean_ein("12 3456789") == "12-3456789"
 
@@ -32,13 +30,13 @@ class TestDataCleaner:
         """Test EIN cleaning with invalid formats."""
         # Too short
         assert cleaner._clean_ein("12345") is None
-        
+
         # Too long
         assert cleaner._clean_ein("1234567890") is None
-        
+
         # Empty
         assert cleaner._clean_ein("") is None
-        
+
         # Non-numeric
         assert cleaner._clean_ein("AB-CDEFGHI") is None
 
@@ -46,13 +44,13 @@ class TestDataCleaner:
         """Test phone cleaning with valid formats."""
         # 10 digits
         assert cleaner._clean_phone("5551234567") == "(555) 123-4567"
-        
+
         # With country code
         assert cleaner._clean_phone("15551234567") == "(555) 123-4567"
-        
+
         # Formatted
         assert cleaner._clean_phone("(555) 123-4567") == "(555) 123-4567"
-        
+
         # Dashes
         assert cleaner._clean_phone("555-123-4567") == "(555) 123-4567"
 
@@ -60,7 +58,7 @@ class TestDataCleaner:
         """Test phone cleaning with invalid formats."""
         # Too short
         assert cleaner._clean_phone("123456") is None
-        
+
         # Empty
         assert cleaner._clean_phone("") is None
 
@@ -102,7 +100,7 @@ class TestDataCleaner:
     def test_calculate_quality_score(self, cleaner):
         """Test data quality score calculation."""
         import pandas as pd
-        
+
         # High quality row
         high_quality = pd.Series({
             "organization_name": "Test Org",
@@ -116,14 +114,14 @@ class TestDataCleaner:
             "zip": "10001",
             "mission_statement": "Our mission is to help.",
         })
-        
+
         score = cleaner._calculate_quality_score(high_quality)
         assert score > 80  # Should be high quality
 
     def test_validate_row_valid(self, cleaner):
         """Test row validation with valid data."""
         import pandas as pd
-        
+
         valid_row = pd.Series({
             "ein": "12-3456789",
             "organization_name": "Valid Organization",
@@ -131,14 +129,14 @@ class TestDataCleaner:
             "phone": "(555) 123-4567",
             "website": "https://example.com",
         })
-        
+
         issues = cleaner._validate_row(valid_row)
         assert len(issues) == 0
 
     def test_validate_row_invalid(self, cleaner):
         """Test row validation with invalid data."""
         import pandas as pd
-        
+
         invalid_row = pd.Series({
             "ein": "invalid",
             "organization_name": "",
@@ -146,7 +144,7 @@ class TestDataCleaner:
             "phone": "123",
             "website": "not a url",
         })
-        
+
         issues = cleaner._validate_row(invalid_row)
         assert len(issues) > 0
 

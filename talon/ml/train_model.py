@@ -15,10 +15,9 @@ from pathlib import Path
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+from shared.logging import get_logger
 from talon.ml.model_trainer import ThreatModelTrainer
 from talon.ml.threat_model import MLThreatScorer
-from talon.ml.feature_engineering import VulnerabilityFeatureExtractor
-from shared.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -37,7 +36,7 @@ def train_synthetic(args):
         n_samples=args.n_samples
     )
 
-    logger.info(f"Score distribution:")
+    logger.info("Score distribution:")
     import numpy as np
     logger.info(f"  Min: {np.min(scores):.2f}")
     logger.info(f"  Max: {np.max(scores):.2f}")
@@ -155,7 +154,7 @@ def evaluate_model(args):
         return
 
     logger.info(f"Loaded model version: {scorer.model.version}")
-    logger.info(f"Training metrics:")
+    logger.info("Training metrics:")
     for metric, value in scorer.model.metrics.items():
         logger.info(f"  {metric}: {value:.4f}")
 

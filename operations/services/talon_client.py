@@ -1,6 +1,6 @@
 """Talon API client for Operations service."""
 
-from typing import Any, Optional
+from typing import Any
 
 import httpx
 
@@ -32,9 +32,9 @@ class TalonClient:
         channel: str,
         recipient: str,
         body: str,
-        subject: Optional[str] = None,
-        metadata: Optional[dict] = None,
-    ) -> Optional[dict[str, Any]]:
+        subject: str | None = None,
+        metadata: dict | None = None,
+    ) -> dict[str, Any] | None:
         """
         Send a notification via Talon.
 
@@ -68,7 +68,7 @@ class TalonClient:
                 )
                 response.raise_for_status()
                 return response.json()
-                
+
         except Exception as e:
             logger.error(f"Failed to send notification via Talon: {e}")
             return None
@@ -78,8 +78,8 @@ class TalonClient:
         title: str,
         message: str,
         severity: str = "medium",
-        channels: Optional[list[str]] = None,
-    ) -> Optional[dict[str, Any]]:
+        channels: list[str] | None = None,
+    ) -> dict[str, Any] | None:
         """
         Send an alert via Talon.
 
@@ -109,7 +109,7 @@ class TalonClient:
                 )
                 response.raise_for_status()
                 return response.json()
-                
+
         except Exception as e:
             logger.error(f"Failed to send alert via Talon: {e}")
             return None
@@ -122,7 +122,7 @@ class TalonClient:
     ) -> None:
         """Report upcoming deadline to Talon for alerting."""
         severity = "critical" if days_remaining <= 3 else "high" if days_remaining <= 7 else "medium"
-        
+
         self.send_alert(
             title=f"Grant Deadline: {grant_name}",
             message=(
@@ -145,7 +145,7 @@ class TalonClient:
         except Exception:
             return False
 
-    def get_vulnerability_stats(self) -> Optional[dict[str, Any]]:
+    def get_vulnerability_stats(self) -> dict[str, Any] | None:
         """Get vulnerability statistics from Talon."""
         try:
             with httpx.Client(
@@ -160,7 +160,7 @@ class TalonClient:
             logger.error(f"Failed to get vulnerability stats: {e}")
             return None
 
-    def get_scan_stats(self) -> Optional[dict[str, Any]]:
+    def get_scan_stats(self) -> dict[str, Any] | None:
         """Get scan statistics from Talon."""
         try:
             with httpx.Client(
