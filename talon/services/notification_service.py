@@ -29,7 +29,7 @@ class NotificationStrategy(ABC):
 class SMSStrategy(NotificationStrategy):
     """SMS notification via Twilio."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.config = config.twilio
 
     def is_configured(self) -> bool:
@@ -62,7 +62,7 @@ class SMSStrategy(NotificationStrategy):
 class EmailStrategy(NotificationStrategy):
     """Email notification via SendGrid."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.config = config.sendgrid
 
     def is_configured(self) -> bool:
@@ -98,7 +98,7 @@ class EmailStrategy(NotificationStrategy):
 class SlackStrategy(NotificationStrategy):
     """Slack notification via webhook."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.config = config.slack
 
     def is_configured(self) -> bool:
@@ -129,9 +129,9 @@ class SlackStrategy(NotificationStrategy):
             logger.error(f"Slack send failed: {e}")
             raise
 
-    def _build_slack_blocks(self, notification: Notification) -> list[dict]:
+    def _build_slack_blocks(self, notification: Notification) -> list[dict[str, Any]]:
         """Build Slack block kit message."""
-        blocks = []
+        blocks: list[dict[str, Any]] = []
 
         if notification.subject:
             blocks.append(
@@ -182,7 +182,7 @@ class SlackStrategy(NotificationStrategy):
 class NotificationService:
     """Service for managing notifications using Strategy pattern."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.strategies: dict[str, NotificationStrategy] = {
             "sms": SMSStrategy(),
             "email": EmailStrategy(),
@@ -263,8 +263,8 @@ class NotificationService:
         title: str,
         message: str,
         severity: str = "high",
-        channels: list[str] = None,
-        recipients: dict[str, list[str]] = None,
+        channels: list[str] | None = None,
+        recipients: dict[str, list[str]] | None = None,
     ) -> dict[str, Any]:
         """Send an alert to multiple channels."""
         channels = channels or ["slack"]
