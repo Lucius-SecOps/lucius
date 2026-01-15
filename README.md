@@ -129,10 +129,15 @@ lucius/
 │   ├── app.py               # Flask application factory
 │   ├── celery_app.py        # Celery configuration
 │   ├── models.py            # SQLAlchemy models
+│   ├── schemas.py           # Pydantic validation schemas
 │   ├── api/                 # REST API endpoints
 │   │   ├── scans.py
 │   │   ├── vulnerabilities.py
 │   │   └── notifications.py
+│   ├── repositories/        # Data access layer
+│   │   ├── base.py          # Base repository with tenant support
+│   │   ├── vulnerability_repository.py
+│   │   └── scan_repository.py
 │   ├── services/            # Business logic
 │   │   ├── scan_service.py
 │   │   ├── notification_service.py
@@ -148,16 +153,82 @@ lucius/
 │       └── data_cleaner.py
 │
 ├── shared/                   # Shared utilities
+│   ├── interfaces.py        # Abstract base classes
 │   ├── logging.py           # Structured logging
 │   └── types.py             # Common type definitions
 │
 ├── tests/                    # Test suite
 ├── scripts/                  # Utility scripts
-│   └── init-db.sql          # Database initialization
+│   ├── init-db.sql          # Database initialization
+│   └── migrations/          # SQL migrations
 │
 ├── .github/workflows/        # CI/CD pipelines
+│   ├── ci.yml               # Lint, type-check, test
+│   ├── deploy.yml           # Container builds
+│   ├── security.yml         # Security scanning
+│   └── license-guard.yml    # License verification
 ├── docker-compose.yml        # Container orchestration
 └── pyproject.toml           # Project configuration
+```
+
+## 🏢 Multi-Tenancy
+
+Lucius supports multi-tenant deployments with row-level data isolation:
+
+### Tenant Configuration
+```python
+from talon.repositories import VulnerabilityRepository, ScanRepository
+
+# Initialize repository with tenant context
+vuln_repo = VulnerabilityRepository(tenant_id="tenant-123")
+scan_repo = ScanRepository(tenant_id="tenant-123")
+
+# All operations are automatically scoped to the tenant
+vulns = vuln_repo.find_by_severity("CRITICAL")
+scans = scan_repo.find_by_project("my-project")
+```
+
+### Database Migration
+```bash
+# Run tenant support migration
+psql -U lucius -d lucius_db -f scripts/migrations/002_add_tenant_support.sql
+```
+
+## 🔒 Repository Pattern
+
+The repository layer provides:
+- **Tenant isolation**: All queries filtered by tenant_id
+- **Audit logging**: Structured logs for all operations
+- **Pydantic validation**: Input/output schema enforcement
+- **Idempotent operations**: Safe retry for bulk operations
+
+### Example Usage
+```python
+from talon.repositories import VulnerabilityRepository
+from talon.schemas import VulnerabilityCreate
+
+repo = VulnerabilityRepository(tenant_id="my-tenant")
+
+# Create vulnerability (validated via Pydantic)
+data = VulnerabilityCreate(
+    cve_id="CVE-2021-44228",
+    severity="CRITICAL",
+    cvss_score=10.0,
+    description="Log4Shell vulnerability"
+)
+vuln = repo.upsert(data.cve_id, data.model_dump())
+
+# Search with filters
+results, total = repo.search(
+    query="log4j",
+    severity="CRITICAL",
+    min_cvss=9.0,
+    limit=50
+)
+
+# Get statistics
+stats = repo.get_statistics()
+print(f"Critical: {stats['critical_count']}, Last 7 days: {stats['last_7_days']}")
 ```
 
 ## 🔐 Environment Variables
@@ -168,9 +239,13 @@ lucius/
 | `REDIS_URL` | Redis connection string | `redis://localhost:6379/0` |
 | `NVD_API_KEY` | NVD API key for vulnerability data | Required |
 | `SECRET_KEY` | Flask secret key | Required |
+| `DEFAULT_TENANT_ID` | Default tenant for single-tenant mode | `default` |
+| `LOG_LEVEL` | Logging level | `INFO` |
+| `LOG_JSON_FORMAT` | Enable JSON structured logs | `false` |
 | `TWILIO_ACCOUNT_SID` | Twilio account for SMS | Optional |
 | `TWILIO_AUTH_TOKEN` | Twilio auth token | Optional |
-| `SMTP_HOST` | Email server host | Optional |
+| `SENDGRID_API_KEY` | SendGrid API key for email | Optional |
+| `SLACK_WEBHOOK_URL` | Slack webhook for notifications | Optional |
 
 ## 🔄 Design Patterns
 
