@@ -114,7 +114,7 @@ class WebScanResource(Resource):
             return result, 200
 
         except Exception as e:
-            raise BadRequest(f"Web scan failed: {str(e)}")
+            raise BadRequest(f"Web scan failed: {e}") from e
 
 
 # ============================================================================
@@ -156,7 +156,7 @@ class ContainerScanResource(Resource):
             return result, 200
 
         except Exception as e:
-            raise BadRequest(f"Container scan failed: {str(e)}")
+            raise BadRequest(f"Container scan failed: {e}") from e
 
 
 # ============================================================================
@@ -198,7 +198,7 @@ class SecretsScanResource(Resource):
             return result, 200
 
         except Exception as e:
-            raise BadRequest(f"Secrets scan failed: {str(e)}")
+            raise BadRequest(f"Secrets scan failed: {e}") from e
 
 
 # ============================================================================
@@ -234,7 +234,7 @@ class SASTScanResource(Resource):
             return result, 200
 
         except Exception as e:
-            raise BadRequest(f"SAST analysis failed: {str(e)}")
+            raise BadRequest(f"SAST analysis failed: {e}") from e
 
 
 # ============================================================================
@@ -270,7 +270,7 @@ class IaCScanResource(Resource):
             return result, 200
 
         except Exception as e:
-            raise BadRequest(f"IaC scan failed: {str(e)}")
+            raise BadRequest(f"IaC scan failed: {e}") from e
 
 
 # ============================================================================
@@ -301,7 +301,7 @@ class ThreatIntelResource(Resource):
             return result, 200
 
         except Exception as e:
-            raise BadRequest(f"Threat intelligence enrichment failed: {str(e)}")
+            raise BadRequest(f"Threat intelligence enrichment failed: {e}") from e
 
 
 @api.route('/threat-intel/bulk')
@@ -326,7 +326,7 @@ class BulkThreatIntelResource(Resource):
             return results, 200
 
         except Exception as e:
-            raise BadRequest(f"Bulk enrichment failed: {str(e)}")
+            raise BadRequest(f"Bulk enrichment failed: {e}") from e
 
 
 # ============================================================================
@@ -362,7 +362,7 @@ class ExploitPredictionResource(Resource):
             return prediction, 200
 
         except Exception as e:
-            raise BadRequest(f"Exploit prediction failed: {str(e)}")
+            raise BadRequest(f"Exploit prediction failed: {e}") from e
 
 
 # ============================================================================
@@ -403,7 +403,7 @@ class RemediationPlanResource(Resource):
             return plan, 200
 
         except Exception as e:
-            raise BadRequest(f"Remediation planning failed: {str(e)}")
+            raise BadRequest(f"Remediation planning failed: {e}") from e
 
 
 @api.route('/remediation/apply')
@@ -440,7 +440,7 @@ class RemediationApplyResource(Resource):
             return result, 200
 
         except Exception as e:
-            raise BadRequest(f"Remediation application failed: {str(e)}")
+            raise BadRequest(f"Remediation application failed: {e}") from e
 
 
 # ============================================================================
@@ -488,4 +488,4 @@ class ReachabilityResource(Resource):
             return analysis, 200
 
         except Exception as e:
-            raise BadRequest(f"Reachability analysis failed: {str(e)}")
+            raise BadRequest(f"Reachability analysis failed: {e}") from e
