@@ -2,6 +2,7 @@
 requests>=2.31.0
 httpx>=0.25.0
 aiohttp>=3.9.0
+certifi>=2023.7.22
 
 # Parsing
 packaging>=23.0
@@ -26,3 +27,17 @@ tenacity>=8.2.0
 
 # Logging
 structlog>=23.2.0
+
+# Web Scanning
+beautifulsoup4>=4.12.0
+lxml>=4.9.3
+
+# Container Scanning (optional - requires system tools)
+# docker>=7.0.0
+
+# Git Operations
+GitPython>=3.1.40
+
+# Security Analysis
+safety>=2.3.5
+bandit>=1.7.5
