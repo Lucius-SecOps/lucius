@@ -24,6 +24,10 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Topic :: Security",
 ]
+dependencies = [
+    "sublist3r>=1.0.0",
+    "sqlmap>=1.8.0",
+]
 
 [project.optional-dependencies]
 dev = [

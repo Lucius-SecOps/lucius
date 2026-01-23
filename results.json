@@ -1,0 +1,46 @@
+{
+  "timestamp": "2026-01-22T17:25:17.846617",
+  "target": "example.com",
+  "subdomains_found": 5,
+  "vulnerabilities_found": 0,
+  "subdomains": [
+    {
+      "domain": "example.com",
+      "subdomain": "www.example.com",
+      "source": "simulated",
+      "timestamp": "2026-01-22T17:25:17.845823"
+    },
+    {
+      "domain": "example.com",
+      "subdomain": "mail.example.com",
+      "source": "simulated",
+      "timestamp": "2026-01-22T17:25:17.846487"
+    },
+    {
+      "domain": "example.com",
+      "subdomain": "api.example.com",
+      "source": "simulated",
+      "timestamp": "2026-01-22T17:25:17.846491"
+    },
+    {
+      "domain": "example.com",
+      "subdomain": "admin.example.com",
+      "source": "simulated",
+      "timestamp": "2026-01-22T17:25:17.846494"
+    },
+    {
+      "domain": "example.com",
+      "subdomain": "dev.example.com",
+      "source": "simulated",
+      "timestamp": "2026-01-22T17:25:17.846497"
+    }
+  ],
+  "metadata": {
+    "dry_run": false,
+    "tools_used": [
+      "sublist3r"
+    ],
+    "python_version": "3.11.14",
+    "sublist3r_available": true
+  }
+}

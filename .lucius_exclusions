@@ -1,0 +1,23 @@
+# Lucius Sentinel - Excluded Targets
+# These targets are excluded from automated scanning to maintain ethical compliance
+# and prevent interference with active vulnerability disclosure processes.
+
+# Robinhood HackerOne Disclosure - Active Report
+# Status: Awaiting triage acknowledgment
+# Date: 2026-01-22
+# Reason: 403 Forbidden subdomains confirmed, reported to HackerOne
+# DO NOT SCAN until triager acknowledges report
+
+admin.api.robinhood.com
+internal.api.robinhood.com
+staging.api.robinhood.com
+dev.api.robinhood.com
+test.api.robinhood.com
+
+# Additional Notes:
+# - All above subdomains return 403 Forbidden from CloudFront
+# - SSL/TLS handshake failures observed
+# - DNS resolves to 13.33.82.x (AWS CloudFront)
+# - Evidence captured in ROBINHOOD_EVIDENCE_*.txt
+# - Full documentation in CONFIRMED_FINDINGS.md
+# - Awaiting HackerOne triage before further testing
