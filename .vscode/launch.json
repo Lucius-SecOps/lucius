@@ -7,7 +7,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "python": "${workspaceFolder}/.venv/bin/python",
+            "python": "${command:python.interpreterPath}",
             "cwd": "${workspaceFolder}",
             "justMyCode": true
         },
@@ -17,7 +17,7 @@
             "request": "launch",
             "module": "sentinel.cli",
             "console": "integratedTerminal",
-            "python": "${workspaceFolder}/.venv/bin/python",
+            "python": "${command:python.interpreterPath}",
             "cwd": "${workspaceFolder}",
             "args": []
         },
@@ -35,7 +35,7 @@
                 "--debug"
             ],
             "console": "integratedTerminal",
-            "python": "${workspaceFolder}/.venv/bin/python",
+            "python": "${command:python.interpreterPath}",
             "cwd": "${workspaceFolder}",
             "justMyCode": true
         },
@@ -45,7 +45,7 @@
             "request": "launch",
             "module": "pytest",
             "console": "integratedTerminal",
-            "python": "${workspaceFolder}/.venv/bin/python",
+            "python": "${command:python.interpreterPath}",
             "cwd": "${workspaceFolder}",
             "args": [
                 "tests/"

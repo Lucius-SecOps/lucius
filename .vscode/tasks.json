@@ -4,7 +4,7 @@
         {
             "label": "Run Python File",
             "type": "shell",
-            "command": "${workspaceFolder}/.venv/bin/python",
+            "command": "${command:python.interpreterPath}",
             "args": [
                 "${file}"
             ],
@@ -21,7 +21,7 @@
         {
             "label": "Run Tests",
             "type": "shell",
-            "command": "${workspaceFolder}/.venv/bin/python",
+            "command": "${command:python.interpreterPath}",
             "args": [
                 "-m",
                 "pytest",
@@ -37,7 +37,7 @@
         {
             "label": "Run Sentinel Scanner",
             "type": "shell",
-            "command": "${workspaceFolder}/.venv/bin/python",
+            "command": "${command:python.interpreterPath}",
             "args": [
                 "-m",
                 "sentinel.cli"
