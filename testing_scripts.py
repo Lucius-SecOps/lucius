@@ -1130,8 +1130,7 @@ This vulnerability allows:
         print("\n" + "=" * 70)
         print("NEXT STEPS FOR HACKERONE SUBMISSION:")
         print("=" * 70)
-        print(
-            """
+        print("""
 1. Review each finding in the JSON report
 2. Calculate CVSS v3.1 vector strings:
    https://www.first.org/cvss/calculator/3.1
@@ -1142,8 +1141,7 @@ This vulnerability allows:
    - X-Test-Account-Email: your_test_email
 6. Submit to HackerOne dashboard:
    https://hackerone.com/robinhood/reports/new
-        """
-        )
+        """)
 
 
 # ============================================================================
